@@ -24,6 +24,11 @@ import { VAULT_ROOT } from "../vault.config.mjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..");
 const OUTPUT_PATH = join(PROJECT_ROOT, "src", "data", "vaultIndex.generated.json");
+const VAULT_CONTENT_DIR = join(PROJECT_ROOT, "src", "data", "vault");
+
+function safeFolderName(folder) {
+  return folder.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
 
 const SKIP_DIRS = new Set([
   "Extras",
@@ -218,7 +223,7 @@ async function parseNote(vaultRoot, relPath) {
     .map((s) => ({ level: s.level, text: s.heading }));
   const type = FOLDER_TYPES[folder] || "reference";
 
-  return {
+  const note = {
     id: relPath,
     path: relPath,
     folder,
@@ -235,6 +240,8 @@ async function parseNote(vaultRoot, relPath) {
     byteSize: stats.size,
     reliability,
   };
+
+  return { note, raw };
 }
 
 async function main() {
@@ -249,11 +256,13 @@ async function main() {
   console.log(`[indexer] Markdown files: ${files.length}`);
 
   const notes = {};
+  const rawContent = {};
   let parseFailures = 0;
   for (const rel of files) {
     try {
-      const note = await parseNote(VAULT_ROOT, rel);
+      const { note, raw } = await parseNote(VAULT_ROOT, rel);
       notes[note.id] = note;
+      rawContent[note.id] = raw.replace(/\r\n/g, "\n");
     } catch (err) {
       parseFailures++;
       console.warn(`[indexer] Skip ${rel}: ${err.message}`);
@@ -322,8 +331,32 @@ async function main() {
   await mkdir(dirname(OUTPUT_PATH), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2), "utf8");
 
-  const sizeKb = (Buffer.byteLength(JSON.stringify(output)) / 1024).toFixed(1);
-  console.log(`[indexer] Wrote ${relative(PROJECT_ROOT, OUTPUT_PATH)} (${sizeKb} KB)`);
+  // Split full markdown content into per-folder files so Vite can code-split
+  // the reader by folder. Each chunk loads only when the user opens that
+  // folder's notes.
+  await mkdir(VAULT_CONTENT_DIR, { recursive: true });
+  const byFolder = {};
+  for (const [id, raw] of Object.entries(rawContent)) {
+    const note = notes[id];
+    if (!byFolder[note.folder]) byFolder[note.folder] = {};
+    byFolder[note.folder][id] = raw;
+  }
+  let totalContentBytes = 0;
+  for (const [folder, contents] of Object.entries(byFolder)) {
+    const target = join(VAULT_CONTENT_DIR, `${safeFolderName(folder)}.generated.json`);
+    const json = JSON.stringify(contents);
+    totalContentBytes += Buffer.byteLength(json);
+    await writeFile(target, json, "utf8");
+  }
+
+  const indexKb = (Buffer.byteLength(JSON.stringify(output)) / 1024).toFixed(1);
+  const contentKb = (totalContentBytes / 1024).toFixed(1);
+  console.log(
+    `[indexer] Wrote ${relative(PROJECT_ROOT, OUTPUT_PATH)} (${indexKb} KB)`,
+  );
+  console.log(
+    `[indexer] Wrote ${Object.keys(byFolder).length} folder chunks under ${relative(PROJECT_ROOT, VAULT_CONTENT_DIR)} (${contentKb} KB total)`,
+  );
   console.log(
     `[indexer] ${totals.noteCount} notes, ${totals.flagged} flagged, ${parseFailures} skipped`,
   );

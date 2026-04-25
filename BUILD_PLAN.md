@@ -30,7 +30,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | #   | Phase                                                  | Status      |
 | --- | ------------------------------------------------------ | ----------- |
 | P0  | Foundation: cleanup + vault indexer                    | done        |
-| P1  | In-app note reader + Library tab                       | todo        |
+| P1  | In-app note reader + Library tab                       | done        |
 | P2  | Skills + Drills frame + Daily Loop home                | todo        |
 | P3  | Greenfield drill end-to-end (template drill)           | todo        |
 | P4  | Workspaces (persistence + browser)                     | todo        |
@@ -44,7 +44,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P12 | Calibration: skills passport + gaps + spaced rep       | todo        |
 | P13 | Polish: mobile, performance, error boundaries          | todo        |
 
-**Current phase pointer**: P1
+**Current phase pointer**: P2
 
 ## Phase specs
 
@@ -171,3 +171,6 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 
 ### P0 log
 - 2026-04-25: Indexer parses 255 notes across 22 folders, 143 with reliability flags, 87 backlinks resolved. Generated index is 555 KB JSON. Build passes; dev server boots on port 5174. `vault.config.mjs` supports `VAULT_PATH` env override. `src/data/vaultIndex.js` now merges curated section descriptions with generated counts via `SECTION_MANIFEST`. Helpers exported: `notesByFolder`, `notesByType`, `notesByTag`, `getNote`, `backlinksFor`. Generated JSON gitignored.
+
+### P1 log
+- 2026-04-25: Indexer now also emits per-folder content chunks under `src/data/vault/*.generated.json` (19 chunks, 8.26 MB total raw / ~1.5 MB gzipped, code-split per folder via `import.meta.glob`). Added `src/lib/markdown.js` (marked + lazy mermaid + lazy highlight.js + Obsidian wikilink extension). Added `src/lib/vaultLoader.js` (folder-level lazy loader with cache). Added `src/components/NoteReader.jsx` (renders markdown, scrolls top on note change, resolves wikilink clicks, shows reliability flag badges + backlinks panel). Added `src/components/LibraryView.jsx` (folder tree + full-text search across title/tag/intuition/heading + note list + reader pane). Wired App.jsx with Library tab, lifted `activeNotePath` state to localStorage, added `openNote(path)` handler that switches tab + sets path. Source-note citations in LearnView (phase.sourceNotes) and VocabView (term.sourceNotes) are now clickable `SourceNoteLink` buttons that open the reader; missing notes show as disabled with strikethrough. Build passes (warnings on chunk size are expected for vault content); dev runs at 5173.

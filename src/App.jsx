@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
+  BookText,
   Brain,
   Check,
   CheckCircle2,
@@ -23,11 +24,13 @@ import {
 } from "lucide-react";
 import { ALL_TERMS, CATEGORIES } from "./data/terms.js";
 import { LEARNING_PHASES, NOTE_TEMPLATES, REVIEW_CATEGORIES, SCORE_CATEGORIES } from "./data/learning.js";
-import { VAULT_ROOT, VAULT_SECTIONS } from "./data/vaultIndex.js";
+import { VAULT_ROOT, VAULT_SECTIONS, getNote } from "./data/vaultIndex.js";
 import { analyzeBrief, buildProposal } from "./lib/reviewEngine.js";
+import { LibraryView } from "./components/LibraryView.jsx";
 
 const tabs = [
   { id: "learn", label: "Learn", icon: BookOpen },
+  { id: "library", label: "Library", icon: BookText },
   { id: "vocab", label: "Vocabulary", icon: Brain },
   { id: "review", label: "Review System", icon: ClipboardList },
   { id: "proposal", label: "Proposal", icon: FileText },
@@ -112,7 +115,24 @@ function VaultMap() {
   );
 }
 
-function LearnView() {
+function SourceNoteLink({ path, onOpenNote }) {
+  const note = getNote(path);
+  const label = note ? note.title : path;
+  const missing = !note;
+  return (
+    <button
+      className={cx("source-note-link", missing && "is-missing")}
+      onClick={() => !missing && onOpenNote?.(path)}
+      title={missing ? `Not in vault index: ${path}` : path}
+      disabled={missing}
+    >
+      <FileText size={12} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function LearnView({ onOpenNote }) {
   const [selectedPhaseId, setSelectedPhaseId] = useState(LEARNING_PHASES[0].id);
   const [labMode, setLabMode] = useState("Roadmap");
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -329,7 +349,7 @@ function LearnView() {
           <div className="source-note-box">
             <h3>Source notes</h3>
             {phase.sourceNotes.map((note) => (
-              <span key={note}>{note}</span>
+              <SourceNoteLink key={note} path={note} onOpenNote={onOpenNote} />
             ))}
           </div>
         </aside>
@@ -545,7 +565,7 @@ function useLocalStorage(key, initialValue) {
   return [value, setValue];
 }
 
-function TermCard({ term, expanded, onToggle }) {
+function TermCard({ term, expanded, onToggle, onOpenNote }) {
   return (
     <article className={cx("term-card", expanded && "is-expanded")} style={{ "--accent": term.color }}>
       <button className="term-card-button" onClick={onToggle}>
@@ -570,7 +590,11 @@ function TermCard({ term, expanded, onToggle }) {
           ))}
           <div>
             <span>Source notes</span>
-            <p>{term.sourceNotes.join(", ")}</p>
+            <div className="term-source-notes">
+              {term.sourceNotes.map((note) => (
+                <SourceNoteLink key={note} path={note} onOpenNote={onOpenNote} />
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -643,7 +667,7 @@ function Flashcards({ terms }) {
   );
 }
 
-function VocabView() {
+function VocabView({ onOpenNote }) {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("All");
   const [expanded, setExpanded] = useState(null);
@@ -719,6 +743,7 @@ function VocabView() {
               term={term}
               expanded={expanded === term.term}
               onToggle={() => setExpanded(expanded === term.term ? null : term.term)}
+              onOpenNote={onOpenNote}
             />
           ))}
           {filtered.length === 0 && <div className="empty-state">No terms match your search.</div>}
@@ -849,6 +874,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("learn");
   const [reviewText, setReviewText] = useState("");
   const [systemName, setSystemName] = useState("");
+  const [activeNotePath, setActiveNotePath] = useLocalStorage(
+    "hld-active-note",
+    null,
+  );
   const [theme, setTheme] = useLocalStorage("hld-theme", () =>
     window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
   );
@@ -856,6 +885,11 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  const openNote = (path) => {
+    setActiveNotePath(path);
+    setActiveTab("library");
+  };
 
   return (
     <div className="app-shell">
@@ -865,8 +899,15 @@ export default function App() {
         theme={theme}
         onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
       />
-      {activeTab === "learn" && <LearnView />}
-      {activeTab === "vocab" && <VocabView />}
+      {activeTab === "learn" && <LearnView onOpenNote={openNote} />}
+      {activeTab === "library" && (
+        <LibraryView
+          activeNotePath={activeNotePath}
+          onOpenNote={setActiveNotePath}
+          theme={theme}
+        />
+      )}
+      {activeTab === "vocab" && <VocabView onOpenNote={openNote} />}
       {activeTab === "review" && (
         <ReviewView
           reviewText={reviewText}
