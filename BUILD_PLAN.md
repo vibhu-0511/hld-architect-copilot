@@ -31,7 +31,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | --- | ------------------------------------------------------ | ----------- |
 | P0  | Foundation: cleanup + vault indexer                    | done        |
 | P1  | In-app note reader + Library tab                       | done        |
-| P2  | Skills + Drills frame + Daily Loop home                | todo        |
+| P2  | Skills + Drills frame + Daily Loop home                | done        |
 | P3  | Greenfield drill end-to-end (template drill)           | todo        |
 | P4  | Workspaces (persistence + browser)                     | todo        |
 | P5  | Outage replay drill                                    | todo        |
@@ -44,7 +44,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P12 | Calibration: skills passport + gaps + spaced rep       | todo        |
 | P13 | Polish: mobile, performance, error boundaries          | todo        |
 
-**Current phase pointer**: P2
+**Current phase pointer**: P3
 
 ## Phase specs
 
@@ -174,3 +174,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 
 ### P1 log
 - 2026-04-25: Indexer now also emits per-folder content chunks under `src/data/vault/*.generated.json` (19 chunks, 8.26 MB total raw / ~1.5 MB gzipped, code-split per folder via `import.meta.glob`). Added `src/lib/markdown.js` (marked + lazy mermaid + lazy highlight.js + Obsidian wikilink extension). Added `src/lib/vaultLoader.js` (folder-level lazy loader with cache). Added `src/components/NoteReader.jsx` (renders markdown, scrolls top on note change, resolves wikilink clicks, shows reliability flag badges + backlinks panel). Added `src/components/LibraryView.jsx` (folder tree + full-text search across title/tag/intuition/heading + note list + reader pane). Wired App.jsx with Library tab, lifted `activeNotePath` state to localStorage, added `openNote(path)` handler that switches tab + sets path. Source-note citations in LearnView (phase.sourceNotes) and VocabView (term.sourceNotes) are now clickable `SourceNoteLink` buttons that open the reader; missing notes show as disabled with strikethrough. Build passes (warnings on chunk size are expected for vault content); dev runs at 5173.
+- 2026-04-25: Followup — added `vite.config.js` with `@vitejs/plugin-react` so the automatic JSX runtime is enabled (new components don't need `import React`).
+
+### P2 log
+- 2026-04-25: Reframed app from "phases" to "skills + drills." Added `src/data/skills.js` with the ten architect behaviors; each skill has behavior, cue, source notes (from vault), drill, bug scenario, readiness — pulled from existing phase data where possible, written inline for skills 3 (trade-offs), 4 (napkin math), 9 (calibrated), 10 (loop). Extracted `SourceNoteLink` and `VaultMap` from App.jsx into `src/components/`. Added `src/components/SkillsView.jsx` replacing LearnView (sidebar + workbench + overview/drill/bug modes + readiness checklist). Added `src/components/TodayView.jsx` — new home tab with greeting, streak counter (localStorage `hld-streak`), and four daily cards (drill / outage / term / skill) using deterministic per-day hash so all picks rotate together. Outage card pulls from indexed `09_real_outages` notes with failureFirst preview. Tab order is now Today → Skills → Library → Vocabulary → Review System → Proposal → Notes; `activeTab` and `activeSkillId` persisted to localStorage. LearnView removed from App.jsx (~245 lines deleted); imports cleaned.

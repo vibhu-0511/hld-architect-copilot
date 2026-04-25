@@ -1,15 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
-  BookOpen,
   BookText,
   Brain,
-  Check,
   CheckCircle2,
   ClipboardList,
-  Eye,
+  CalendarDays,
   FileText,
-  Lightbulb,
   Moon,
   Network,
   NotebookPen,
@@ -20,16 +17,21 @@ import {
   Shuffle,
   Sparkles,
   Sun,
+  Target,
   Trash2,
 } from "lucide-react";
 import { ALL_TERMS, CATEGORIES } from "./data/terms.js";
-import { LEARNING_PHASES, NOTE_TEMPLATES, REVIEW_CATEGORIES, SCORE_CATEGORIES } from "./data/learning.js";
-import { VAULT_ROOT, VAULT_SECTIONS, getNote } from "./data/vaultIndex.js";
+import { NOTE_TEMPLATES, REVIEW_CATEGORIES } from "./data/learning.js";
+import { LEARNING_PHASES } from "./data/learning.js";
 import { analyzeBrief, buildProposal } from "./lib/reviewEngine.js";
 import { LibraryView } from "./components/LibraryView.jsx";
+import { SkillsView } from "./components/SkillsView.jsx";
+import { TodayView } from "./components/TodayView.jsx";
+import { SourceNoteLink } from "./components/SourceNoteLink.jsx";
 
 const tabs = [
-  { id: "learn", label: "Learn", icon: BookOpen },
+  { id: "today", label: "Today", icon: CalendarDays },
+  { id: "skills", label: "Skills", icon: Target },
   { id: "library", label: "Library", icon: BookText },
   { id: "vocab", label: "Vocabulary", icon: Brain },
   { id: "review", label: "Review System", icon: ClipboardList },
@@ -84,293 +86,6 @@ function Header({ activeTab, onTabChange, theme, onToggleTheme }) {
         </nav>
       </div>
     </header>
-  );
-}
-
-function VaultMap() {
-  return (
-    <section className="panel">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Vault Map</p>
-          <h2>Use your notes as source material, not as a maze.</h2>
-        </div>
-        <span className="pill">{VAULT_SECTIONS.reduce((sum, item) => sum + item.count, 0)} indexed notes</span>
-      </div>
-      <div className="vault-grid">
-        {VAULT_SECTIONS.map((section) => (
-          <article key={section.folder} className="vault-card">
-            <div className="vault-card-top">
-              <span className="priority">{section.priority}</span>
-              <span>{section.count} files</span>
-            </div>
-            <h3>{section.title}</h3>
-            <p>{section.summary}</p>
-            <strong>{section.role}</strong>
-          </article>
-        ))}
-      </div>
-      <p className="source-path">Source: {VAULT_ROOT}</p>
-    </section>
-  );
-}
-
-function SourceNoteLink({ path, onOpenNote }) {
-  const note = getNote(path);
-  const label = note ? note.title : path;
-  const missing = !note;
-  return (
-    <button
-      className={cx("source-note-link", missing && "is-missing")}
-      onClick={() => !missing && onOpenNote?.(path)}
-      title={missing ? `Not in vault index: ${path}` : path}
-      disabled={missing}
-    >
-      <FileText size={12} />
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function LearnView({ onOpenNote }) {
-  const [selectedPhaseId, setSelectedPhaseId] = useState(LEARNING_PHASES[0].id);
-  const [labMode, setLabMode] = useState("Roadmap");
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const phase = LEARNING_PHASES.find((item) => item.id === selectedPhaseId) ?? LEARNING_PHASES[0];
-  const steps = phase.caseExercise.steps;
-  const activeStep = steps[activeStepIndex] ?? steps[0];
-  const answerKey = `${phase.id}:${activeStep.id}`;
-  const currentAnswer = answers[answerKey] ?? "";
-  const answeredSteps = steps.filter((step) => (answers[`${phase.id}:${step.id}`] ?? "").trim().length > 0).length;
-  const completion = Math.round((answeredSteps / steps.length) * 100);
-  const phaseScore = Math.min(100, 34 + answeredSteps * 18 + (currentAnswer.length > 140 ? 12 : 0));
-  const scoreMap = SCORE_CATEGORIES.map((category, index) => ({
-    category,
-    value: Math.min(100, Math.max(24, phaseScore - index * 4 + (answeredSteps > index % 2 ? 8 : 0))),
-  }));
-
-  const updateAnswer = (value) => {
-    setAnswers((prev) => ({ ...prev, [answerKey]: value }));
-  };
-
-  return (
-    <main className="stack">
-      <section className="learning-hero panel">
-        <div>
-          <p className="eyebrow">Phase-Wise HLD Lab</p>
-          <h2>Learn by designing, breaking, and improving systems.</h2>
-          <p>
-            Each phase gives you concepts, a mini exercise, a guided case, a bug scenario,
-            scoring, and readiness checks. Try first, then compare with the reference.
-          </p>
-        </div>
-        <div className="lab-mode-tabs">
-          {["Roadmap", "Case Lab", "Bug Finder"].map((mode) => (
-            <button
-              key={mode}
-              className={labMode === mode ? "is-active" : ""}
-              onClick={() => setLabMode(mode)}
-            >
-              {mode === "Roadmap" && <BookOpen size={15} />}
-              {mode === "Case Lab" && <Sparkles size={15} />}
-              {mode === "Bug Finder" && <AlertTriangle size={15} />}
-              {mode}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="learning-layout">
-        <aside className="panel phase-timeline">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Roadmap</p>
-              <h2>9 phases</h2>
-            </div>
-          </div>
-          {LEARNING_PHASES.map((item) => (
-            <button
-              key={item.id}
-              className={cx("stage-button", selectedPhaseId === item.id && "is-active")}
-              onClick={() => {
-                setSelectedPhaseId(item.id);
-                setActiveStepIndex(0);
-              }}
-            >
-              <span>{item.number}</span>
-              <div>
-                <strong>{item.title}</strong>
-                <small>
-                  {item.level} - {item.duration}
-                </small>
-              </div>
-            </button>
-          ))}
-        </aside>
-
-        <section className="panel phase-workbench">
-          <div className="phase-header">
-            <div>
-              <p className="eyebrow">Phase {phase.number}</p>
-              <h2>{phase.title}</h2>
-              <p>{phase.goal}</p>
-            </div>
-            <div className="phase-progress">
-              <strong>{completion}%</strong>
-              <span>case attempt</span>
-            </div>
-          </div>
-
-          {labMode === "Roadmap" && (
-            <div className="roadmap-grid">
-              <article className="learning-card">
-                <h3>Mental model</h3>
-                <p>{phase.mentalModel}</p>
-              </article>
-              <article className="learning-card">
-                <h3>Mini exercise</h3>
-                <p>{phase.miniExercise}</p>
-              </article>
-              <article className="learning-card">
-                <h3>Concepts</h3>
-                <div className="concept-row compact">
-                  {phase.concepts.map((concept) => (
-                    <span key={concept}>{concept}</span>
-                  ))}
-                </div>
-              </article>
-              <article className="learning-card">
-                <h3>Ready for next phase when...</h3>
-                <ul className="clean-list">
-                  {phase.readiness.map((item) => (
-                    <li key={item}>
-                      <CheckCircle2 size={15} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            </div>
-          )}
-
-          {labMode === "Case Lab" && (
-            <div className="case-lab">
-              <div className="case-intro">
-                <span className="pill">{phase.caseExercise.title}</span>
-                <p>{phase.caseExercise.prompt}</p>
-              </div>
-              <div className="stepper">
-                {steps.map((step, index) => (
-                  <button
-                    key={step.id}
-                    className={cx(activeStepIndex === index && "is-active", (answers[`${phase.id}:${step.id}`] ?? "").trim() && "is-done")}
-                    onClick={() => setActiveStepIndex(index)}
-                  >
-                    {(answers[`${phase.id}:${step.id}`] ?? "").trim() ? <Check size={14} /> : index + 1}
-                    {step.title}
-                  </button>
-                ))}
-              </div>
-              <label className="field-label coach-question">
-                {activeStep.question}
-                <textarea
-                  value={currentAnswer}
-                  onChange={(event) => updateAnswer(event.target.value)}
-                  placeholder="Write your answer first. Try to mention constraints, trade-offs, and failure behavior."
-                />
-              </label>
-              <div className="coach-grid">
-                <div className="outcome-box">
-                  <Lightbulb size={18} />
-                  <div>
-                    <strong>Hint</strong>
-                    <span>{activeStep.hint}</span>
-                  </div>
-                </div>
-                <div className="reference-box">
-                  <div>
-                    <Eye size={17} />
-                    <strong>Compare with reference</strong>
-                  </div>
-                  {currentAnswer.trim() ? (
-                    <p>{activeStep.reference}</p>
-                  ) : (
-                    <p className="muted">Write an attempt to unlock the reference answer.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {labMode === "Bug Finder" && (
-            <div className="bug-lab">
-              <article className="learning-card danger-card">
-                <p className="eyebrow">Flawed architecture</p>
-                <h3>{phase.bugScenario.title}</h3>
-                <p>{phase.bugScenario.flawed}</p>
-              </article>
-              <div className="roadmap-grid">
-                <article className="learning-card">
-                  <h3>Bugs to find</h3>
-                  <ul className="clean-list">
-                    {phase.bugScenario.bugs.map((bug) => (
-                      <li key={bug}>
-                        <AlertTriangle size={15} />
-                        {bug}
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-                <article className="learning-card">
-                  <h3>Optimization path</h3>
-                  <p>{phase.bugScenario.fix}</p>
-                </article>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <aside className="panel coach-panel">
-          <p className="eyebrow">Coach Score</p>
-          <div className="score mini-score">{phaseScore}</div>
-          <p className="muted">Score rises as you attempt case steps. It is a practice signal, not a grade.</p>
-          <div className="score-list">
-            {scoreMap.map((item) => (
-              <div key={item.category}>
-                <span>{item.category}</span>
-                <strong>{item.value}</strong>
-                <div className="score-bar">
-                  <i style={{ width: `${item.value}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="source-note-box">
-            <h3>Source notes</h3>
-            {phase.sourceNotes.map((note) => (
-              <SourceNoteLink key={note} path={note} onOpenNote={onOpenNote} />
-            ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className="panel">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Learning loop</p>
-            <h2>Use this phase in the same order every time.</h2>
-          </div>
-        </div>
-        <div className="learning-loop">
-          {["Learn concept", "Apply to small flow", "Practice full case", "Find bugs", "Write notes", "Propose improvement"].map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </div>
-      </section>
-
-      <VaultMap />
-    </main>
   );
 }
 
@@ -871,11 +586,15 @@ function ProposalView({ reviewText, systemName }) {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("learn");
+  const [activeTab, setActiveTab] = useLocalStorage("hld-active-tab", "today");
   const [reviewText, setReviewText] = useState("");
   const [systemName, setSystemName] = useState("");
   const [activeNotePath, setActiveNotePath] = useLocalStorage(
     "hld-active-note",
+    null,
+  );
+  const [activeSkillId, setActiveSkillId] = useLocalStorage(
+    "hld-active-skill",
     null,
   );
   const [theme, setTheme] = useLocalStorage("hld-theme", () =>
@@ -891,6 +610,10 @@ export default function App() {
     setActiveTab("library");
   };
 
+  const selectSkill = (id) => {
+    setActiveSkillId(id);
+  };
+
   return (
     <div className="app-shell">
       <Header
@@ -899,7 +622,20 @@ export default function App() {
         theme={theme}
         onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
       />
-      {activeTab === "learn" && <LearnView onOpenNote={openNote} />}
+      {activeTab === "today" && (
+        <TodayView
+          onOpenNote={openNote}
+          onJumpToTab={setActiveTab}
+          onSelectSkill={selectSkill}
+        />
+      )}
+      {activeTab === "skills" && (
+        <SkillsView
+          activeSkillId={activeSkillId}
+          onSelectSkill={setActiveSkillId}
+          onOpenNote={openNote}
+        />
+      )}
       {activeTab === "library" && (
         <LibraryView
           activeNotePath={activeNotePath}

@@ -1673,3 +1673,195 @@ select {
     max-height: none;
   }
 }
+
+/* ===== P2 — Today + Skills ===== */
+
+.today-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 28px 32px;
+}
+
+.today-hero h1 {
+  font-size: 28px;
+  margin: 6px 0 8px;
+  line-height: 1.2;
+}
+
+.today-hero p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 56ch;
+}
+
+.today-hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.streak-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--warning-bg), var(--chip-bg));
+  color: var(--warning-ink);
+  border: 1px solid var(--warning-ink);
+  border-radius: 14px;
+  padding: 14px 22px;
+  min-width: 110px;
+  text-align: center;
+}
+
+.streak-badge svg {
+  margin-bottom: 4px;
+}
+
+.streak-badge strong {
+  font-size: 28px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-badge span {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.today-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.today-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+
+.today-card header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.today-card h3 {
+  font-size: 18px;
+  margin: 4px 0 4px;
+  line-height: 1.25;
+}
+
+.today-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.today-card .muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.today-card.today-drill {
+  border-color: rgba(47, 104, 216, 0.35);
+}
+
+.today-card.today-outage {
+  border-color: rgba(194, 65, 45, 0.35);
+}
+
+.today-card.today-term {
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+.today-card.today-skill {
+  border-color: rgba(15, 139, 111, 0.35);
+}
+
+.card-cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border: 1px solid var(--chip-ink);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.card-cta:hover {
+  background: var(--chip-ink);
+  color: var(--panel);
+}
+
+.link-button {
+  background: transparent;
+  color: var(--chip-ink);
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+/* SkillsView accent variable for stage buttons */
+.stage-button {
+  --accent: var(--chip-ink);
+}
+
+.stage-button.is-active {
+  border-left: 3px solid var(--accent);
+}
+
+.phase-header {
+  border-left: 4px solid var(--accent, var(--chip-ink));
+  padding-left: 14px;
+}
+
+.section-heading .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .today-hero {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .streak-badge {
+    justify-self: start;
+    min-width: 0;
+    padding: 10px 16px;
+  }
+
+  .today-grid {
+    grid-template-columns: 1fr;
+  }
+}
