@@ -28,6 +28,8 @@ import { LibraryView } from "./components/LibraryView.jsx";
 import { SkillsView } from "./components/SkillsView.jsx";
 import { TodayView } from "./components/TodayView.jsx";
 import { SourceNoteLink } from "./components/SourceNoteLink.jsx";
+import { StarterPathToday } from "./components/StarterPathToday.jsx";
+import { LevelPicker } from "./components/LevelPicker.jsx";
 
 const tabs = [
   { id: "today", label: "Today", icon: CalendarDays },
@@ -597,6 +599,11 @@ export default function App() {
     "hld-active-skill",
     null,
   );
+  const [level, setLevel] = useLocalStorage("hld-level", null);
+  const [starterProgress, setStarterProgress] = useLocalStorage(
+    "hld-starter-progress",
+    { completedLessons: [] },
+  );
   const [theme, setTheme] = useLocalStorage("hld-theme", () =>
     window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
   );
@@ -614,6 +621,26 @@ export default function App() {
     setActiveSkillId(id);
   };
 
+  const markLessonComplete = (lessonNumber) => {
+    setStarterProgress((current) => {
+      const completed = current?.completedLessons ?? [];
+      if (completed.includes(lessonNumber)) return current;
+      const next = { completedLessons: [...completed, lessonNumber].sort((a, b) => a - b) };
+      // Auto-promote on lesson 14 graduation handled by StarterPathToday
+      // surfacing the graduation screen; the user explicitly clicks
+      // "Switch to Practicing mode" to set level.
+      return next;
+    });
+  };
+
+  const promoteToPracticing = () => {
+    setLevel("practicing");
+  };
+
+  if (!level) {
+    return <LevelPicker onPick={setLevel} />;
+  }
+
   return (
     <div className="app-shell">
       <Header
@@ -623,17 +650,28 @@ export default function App() {
         onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
       />
       {activeTab === "today" && (
-        <TodayView
-          onOpenNote={openNote}
-          onJumpToTab={setActiveTab}
-          onSelectSkill={selectSkill}
-        />
+        level === "beginner" ? (
+          <StarterPathToday
+            completedLessons={starterProgress?.completedLessons ?? []}
+            onMarkComplete={markLessonComplete}
+            onSkipToPracticing={promoteToPracticing}
+            onOpenNote={openNote}
+            theme={theme}
+          />
+        ) : (
+          <TodayView
+            onOpenNote={openNote}
+            onJumpToTab={setActiveTab}
+            onSelectSkill={selectSkill}
+          />
+        )
       )}
       {activeTab === "skills" && (
         <SkillsView
           activeSkillId={activeSkillId}
           onSelectSkill={setActiveSkillId}
           onOpenNote={openNote}
+          level={level}
         />
       )}
       {activeTab === "library" && (

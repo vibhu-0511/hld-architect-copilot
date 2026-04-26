@@ -11,12 +11,13 @@ import {
 import { SKILLS } from "../data/skills.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { VaultMap } from "./VaultMap.jsx";
+import { DrillApproachScaffold } from "./DrillApproachScaffold.jsx";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export function SkillsView({ activeSkillId, onSelectSkill, onOpenNote }) {
+export function SkillsView({ activeSkillId, onSelectSkill, onOpenNote, level }) {
   const initialId = activeSkillId || SKILLS[0].id;
   const [skillId, setSkillId] = useState(initialId);
   const [mode, setMode] = useState("overview");
@@ -147,6 +148,9 @@ export function SkillsView({ activeSkillId, onSelectSkill, onOpenNote }) {
 
           {mode === "drill" && drill && (
             <div className="case-lab">
+              <DrillApproachScaffold
+                defaultOpen={level !== "advanced"}
+              />
               <div className="case-intro">
                 <span className="pill">{drill.title}</span>
                 <p>{drill.prompt}</p>
