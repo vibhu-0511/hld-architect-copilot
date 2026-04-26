@@ -1,0 +1,120 @@
+import { useMemo, useState } from "react";
+import { ArrowRight, Sparkles, Wrench } from "lucide-react";
+import { DRILL_CASES } from "../data/drillCases.js";
+import { DrillWizard } from "./DrillWizard.jsx";
+
+const DIFFICULTY_LABEL = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+};
+
+function caseProgress(caseId) {
+  try {
+    const raw = localStorage.getItem(`hld-drill-${caseId}`);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    if (state?.completedAt) return "completed";
+    if (state?.components?.length || Object.values(state?.constraints || {}).some(Boolean)) {
+      return "in-progress";
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function DrillView({ activeCaseId, onSelectCase, onOpenNote, theme, level }) {
+  const [progressTick, setProgressTick] = useState(0);
+
+  const cases = useMemo(
+    () =>
+      DRILL_CASES.map((c) => ({
+        ...c,
+        status: caseProgress(c.id),
+      })),
+    [progressTick],
+  );
+
+  const refreshProgress = () => setProgressTick((t) => t + 1);
+
+  if (activeCaseId) {
+    return (
+      <DrillWizard
+        caseId={activeCaseId}
+        onExit={() => {
+          refreshProgress();
+          onSelectCase(null);
+        }}
+        onOpenNote={onOpenNote}
+        theme={theme}
+      />
+    );
+  }
+
+  return (
+    <main className="stack">
+      <section className="panel drill-hero">
+        <div>
+          <p className="eyebrow">
+            <Wrench size={13} /> Greenfield Drill
+          </p>
+          <h1>Design a real system end-to-end.</h1>
+          <p>
+            Pick a case. State constraints. Choose components and defend each
+            one. Get linted against architecture rules anchored to your vault.
+            Then compare with the case study.
+          </p>
+          {level === "beginner" && (
+            <p className="muted">
+              Tip: this is most useful after you've finished the starter path.
+              Feel free to peek now though.
+            </p>
+          )}
+        </div>
+        <div className="drill-hero-decor">
+          <Sparkles size={28} />
+        </div>
+      </section>
+
+      <section className="drill-case-grid">
+        {cases.map((c) => (
+          <article
+            key={c.id}
+            className={`drill-case-card difficulty-${c.difficulty}`}
+            onClick={() => onSelectCase(c.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSelectCase(c.id);
+            }}
+          >
+            <div className="drill-case-top">
+              <span className="difficulty-pill">
+                {DIFFICULTY_LABEL[c.difficulty]}
+              </span>
+              {c.status === "in-progress" && (
+                <span className="status-pill in-progress">In progress</span>
+              )}
+              {c.status === "completed" && (
+                <span className="status-pill completed">Completed</span>
+              )}
+            </div>
+            <h3>{c.title}</h3>
+            <p>{c.blurb}</p>
+            <button
+              className="drill-case-cta"
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectCase(c.id);
+              }}
+            >
+              {c.status === "in-progress" ? "Continue" : c.status === "completed" ? "Re-do" : "Start"}
+              <ArrowRight size={14} />
+            </button>
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}

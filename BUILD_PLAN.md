@@ -33,7 +33,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P1  | In-app note reader + Library tab                       | done        |
 | P2  | Skills + Drills frame + Daily Loop home                | done        |
 | P2.5| Beginner mode: level picker + 14-lesson starter path   | done        |
-| P3  | Greenfield drill end-to-end (template drill)           | todo        |
+| P3  | Greenfield drill end-to-end (template drill)           | done        |
 | P4  | Workspaces (persistence + browser)                     | todo        |
 | P5  | Outage replay drill                                    | todo        |
 | P6  | Architecture linter v2 + Bug Finder drill              | todo        |
@@ -45,7 +45,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P12 | Calibration: skills passport + gaps + spaced rep       | todo        |
 | P13 | Polish: mobile, performance, error boundaries          | todo        |
 
-**Current phase pointer**: P3
+**Current phase pointer**: P4
 
 ## Phase specs
 
@@ -182,3 +182,6 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 
 ### P2.5 log
 - 2026-04-26: Beginner mode. Added `LevelPicker` overlay shown on first load when `hld-level` is unset; user picks beginner / practicing / advanced. Added `src/data/starterPath.js` — 14 ordered lessons mapping to existing fundamentals/building-block/pattern/HLD notes, each with `whyThisMatters` and two `checkQuestions`. Added `StarterPathToday` component (rendered on Today tab when level=beginner): hero with progress bar, "Up next" CTA card, full lesson list with done/current/upcoming states, beginner-only term card filtered to Fundamentals, "Skip to Practicing mode" footer. Added `LessonView` for single-lesson detail: back button, why-this-matters callout, embedded NoteReader, two-textarea reflect section, two-click "Mark complete" with confirm step. Graduation screen renders after lesson 14 with explicit "Switch to Practicing mode" promotion. Added `DrillApproachScaffold` (six-step recipe: restate → constraints → paths → components → failures → trade-offs) collapsible in SkillsView drill mode, default open for beginner/practicing, default closed for advanced. App.jsx wires `level` and `starterProgress` to localStorage; gates the rest of the app behind LevelPicker until level is set. Build clean.
+
+### P3 log
+- 2026-04-26: Greenfield drill end-to-end. New top-level **Drill** tab between Skills and Library. Six curated cases (URL Shortener, Notification Service, Real-time Chat, Food Delivery, Search Autocomplete, Payment System) each with prompt, suggested constraints, expected components, key insights, and a `refCasePath` pointing into `05_case_studies/`. 16-component palette categorized as Edge / Application / Data / Async / Observability. Three-step wizard: (1) **Constraints** gate — 8 fields (read QPS, write QPS, p95 latency, team size, consistency, durability, cost, growth) — required to proceed; "Use suggested values" shortcut available. (2) **Components** — palette on the left, chosen list with per-component justification textarea on the right; rule that justifications must be ≥12 chars to advance; warning highlight on under-justified items. (3) **Review** — runs `lintDrill()` over the state and shows findings sorted by severity (high/medium/low) with vault citations as `SourceNoteLink`s; component diff against expected (covered / missed / extra); 10-item self-rubric tied to the architect skills; full case-study `NoteReader` rendered inline at the bottom for reference. Drill state persisted per case in `localStorage[hld-drill-${caseId}]`. Linter has 8 rules: missing-constraints, unjustified-component, cache-without-invalidation, queue-without-controls, sql-write-bottleneck, strong-with-cache, microservices-small-team, sync-side-effects — each with a specific vault citation. New files: `src/data/drillCases.js`, `src/lib/drillLinter.js`, `src/components/DrillView.jsx`, `src/components/DrillWizard.jsx`. Build clean.

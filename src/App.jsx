@@ -19,6 +19,7 @@ import {
   Sun,
   Target,
   Trash2,
+  Wrench,
 } from "lucide-react";
 import { ALL_TERMS, CATEGORIES } from "./data/terms.js";
 import { NOTE_TEMPLATES, REVIEW_CATEGORIES } from "./data/learning.js";
@@ -30,10 +31,12 @@ import { TodayView } from "./components/TodayView.jsx";
 import { SourceNoteLink } from "./components/SourceNoteLink.jsx";
 import { StarterPathToday } from "./components/StarterPathToday.jsx";
 import { LevelPicker } from "./components/LevelPicker.jsx";
+import { DrillView } from "./components/DrillView.jsx";
 
 const tabs = [
   { id: "today", label: "Today", icon: CalendarDays },
   { id: "skills", label: "Skills", icon: Target },
+  { id: "drill", label: "Drill", icon: Wrench },
   { id: "library", label: "Library", icon: BookText },
   { id: "vocab", label: "Vocabulary", icon: Brain },
   { id: "review", label: "Review System", icon: ClipboardList },
@@ -599,6 +602,10 @@ export default function App() {
     "hld-active-skill",
     null,
   );
+  const [activeCaseId, setActiveCaseId] = useLocalStorage(
+    "hld-active-case",
+    null,
+  );
   const [level, setLevel] = useLocalStorage("hld-level", null);
   const [starterProgress, setStarterProgress] = useLocalStorage(
     "hld-starter-progress",
@@ -671,6 +678,15 @@ export default function App() {
           activeSkillId={activeSkillId}
           onSelectSkill={setActiveSkillId}
           onOpenNote={openNote}
+          level={level}
+        />
+      )}
+      {activeTab === "drill" && (
+        <DrillView
+          activeCaseId={activeCaseId}
+          onSelectCase={setActiveCaseId}
+          onOpenNote={openNote}
+          theme={theme}
           level={level}
         />
       )}
