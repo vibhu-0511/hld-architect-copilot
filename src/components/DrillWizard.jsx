@@ -19,6 +19,12 @@ import {
   getCase,
 } from "../data/drillCases.js";
 import { lintDrill, diffComponents } from "../lib/drillLinter.js";
+import {
+  ensureDrillWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
+  findDrillWorkspace,
+} from "../data/workspaces.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { NoteReader } from "./NoteReader.jsx";
 
@@ -54,7 +60,7 @@ const SEVERITY_LABEL = {
   low: "Low",
 };
 
-const EMPTY_STATE = {
+const EMPTY_DRILL = {
   constraints: {
     qpsRead: "",
     qpsWrite: "",
@@ -68,37 +74,45 @@ const EMPTY_STATE = {
   components: [],
   rubric: {},
   step: 0,
-  completedAt: null,
 };
-
-function loadState(caseId) {
-  try {
-    const raw = localStorage.getItem(`hld-drill-${caseId}`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return { ...EMPTY_STATE, ...parsed };
-  } catch {
-    return null;
-  }
-}
-
-function saveState(caseId, state) {
-  try {
-    localStorage.setItem(`hld-drill-${caseId}`, JSON.stringify(state));
-  } catch {
-    /* quota errors ignored */
-  }
-}
 
 export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
   const drillCase = getCase(caseId);
-  const [state, setState] = useState(
-    () => loadState(caseId) ?? { ...EMPTY_STATE },
-  );
+  const [workspace, setWorkspace] = useState(() => {
+    if (!drillCase) return null;
+    return ensureDrillWorkspace(caseId);
+  });
 
+  // If the workspace was deleted elsewhere (e.g., by a Reset), refresh.
   useEffect(() => {
-    saveState(caseId, state);
-  }, [caseId, state]);
+    if (!drillCase) return;
+    if (!workspace || workspace.kind !== "drill" || workspace.caseId !== caseId) {
+      const existing = findDrillWorkspace(caseId);
+      setWorkspace(existing ?? ensureDrillWorkspace(caseId));
+    }
+  }, [caseId, drillCase, workspace]);
+
+  const drill = { ...EMPTY_DRILL, ...(workspace?.drill || {}) };
+  const completedAt = workspace?.completedAt || null;
+  const step = drill.step ?? 0;
+
+  const persist = (drillPatch, extra = {}) => {
+    if (!workspace) return;
+    const updated = updateWorkspace(workspace.id, {
+      drill: { ...drill, ...drillPatch },
+      ...extra,
+    });
+    if (updated) setWorkspace(updated);
+  };
+
+  // Maintain the same "state-shaped" view for downstream components.
+  const state = {
+    constraints: drill.constraints,
+    components: drill.components,
+    rubric: drill.rubric,
+    step,
+    completedAt,
+  };
 
   if (!drillCase) {
     return (
@@ -114,59 +128,54 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
     );
   }
 
-  const setStep = (step) => setState((s) => ({ ...s, step }));
+  const setStep = (next) => persist({ step: next });
 
   const updateConstraints = (patch) =>
-    setState((s) => ({ ...s, constraints: { ...s.constraints, ...patch } }));
+    persist({ constraints: { ...drill.constraints, ...patch } });
 
   const addComponent = (paletteId) => {
     const palette = PALETTE_BY_ID[paletteId];
     if (!palette) return;
     const id = `${paletteId}-${Date.now().toString(36)}`;
-    setState((s) => ({
-      ...s,
+    persist({
       components: [
-        ...(s.components || []),
+        ...drill.components,
         { id, paletteId, name: palette.name, justification: "" },
       ],
-    }));
+    });
   };
 
   const removeComponent = (id) =>
-    setState((s) => ({
-      ...s,
-      components: (s.components || []).filter((c) => c.id !== id),
-    }));
+    persist({ components: drill.components.filter((c) => c.id !== id) });
 
   const updateComponent = (id, patch) =>
-    setState((s) => ({
-      ...s,
-      components: (s.components || []).map((c) =>
+    persist({
+      components: drill.components.map((c) =>
         c.id === id ? { ...c, ...patch } : c,
       ),
-    }));
+    });
 
   const toggleRubric = (rubricId) =>
-    setState((s) => ({
-      ...s,
-      rubric: { ...(s.rubric || {}), [rubricId]: !s.rubric?.[rubricId] },
-    }));
+    persist({
+      rubric: { ...drill.rubric, [rubricId]: !drill.rubric?.[rubricId] },
+    });
 
   const useSuggestedConstraints = () =>
-    setState((s) => ({
-      ...s,
-      constraints: { ...drillCase.suggestedConstraints },
-    }));
+    persist({ constraints: { ...drillCase.suggestedConstraints } });
 
-  const markComplete = () =>
-    setState((s) => ({ ...s, completedAt: new Date().toISOString() }));
-
-  const resetCase = () => {
-    if (!confirm("Reset this drill? Constraints, components, and rubric will be cleared.")) return;
-    setState({ ...EMPTY_STATE });
+  const markComplete = () => {
+    if (!workspace) return;
+    const updated = updateWorkspace(workspace.id, {
+      completedAt: new Date().toISOString(),
+    });
+    if (updated) setWorkspace(updated);
   };
 
-  const step = state.step ?? 0;
+  const resetCase = () => {
+    if (!confirm("Reset this drill? Constraints, components, and rubric will be cleared. The workspace will be deleted.")) return;
+    if (workspace) deleteWorkspace(workspace.id);
+    onExit?.();
+  };
 
   return (
     <main className="stack drill-wizard">

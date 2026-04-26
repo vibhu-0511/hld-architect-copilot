@@ -34,7 +34,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P2  | Skills + Drills frame + Daily Loop home                | done        |
 | P2.5| Beginner mode: level picker + 14-lesson starter path   | done        |
 | P3  | Greenfield drill end-to-end (template drill)           | done        |
-| P4  | Workspaces (persistence + browser)                     | todo        |
+| P4  | Workspaces (persistence + browser)                     | done        |
 | P5  | Outage replay drill                                    | todo        |
 | P6  | Architecture linter v2 + Bug Finder drill              | todo        |
 | P7  | Capacity + bottleneck simulator + phased canvas        | todo        |
@@ -45,7 +45,7 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 | P12 | Calibration: skills passport + gaps + spaced rep       | todo        |
 | P13 | Polish: mobile, performance, error boundaries          | todo        |
 
-**Current phase pointer**: P4
+**Current phase pointer**: P5
 
 ## Phase specs
 
@@ -185,3 +185,6 @@ This file tracks the multi-session build of the app. Goal: become the best syste
 
 ### P3 log
 - 2026-04-26: Greenfield drill end-to-end. New top-level **Drill** tab between Skills and Library. Six curated cases (URL Shortener, Notification Service, Real-time Chat, Food Delivery, Search Autocomplete, Payment System) each with prompt, suggested constraints, expected components, key insights, and a `refCasePath` pointing into `05_case_studies/`. 16-component palette categorized as Edge / Application / Data / Async / Observability. Three-step wizard: (1) **Constraints** gate — 8 fields (read QPS, write QPS, p95 latency, team size, consistency, durability, cost, growth) — required to proceed; "Use suggested values" shortcut available. (2) **Components** — palette on the left, chosen list with per-component justification textarea on the right; rule that justifications must be ≥12 chars to advance; warning highlight on under-justified items. (3) **Review** — runs `lintDrill()` over the state and shows findings sorted by severity (high/medium/low) with vault citations as `SourceNoteLink`s; component diff against expected (covered / missed / extra); 10-item self-rubric tied to the architect skills; full case-study `NoteReader` rendered inline at the bottom for reference. Drill state persisted per case in `localStorage[hld-drill-${caseId}]`. Linter has 8 rules: missing-constraints, unjustified-component, cache-without-invalidation, queue-without-controls, sql-write-bottleneck, strong-with-cache, microservices-small-team, sync-side-effects — each with a specific vault citation. New files: `src/data/drillCases.js`, `src/lib/drillLinter.js`, `src/components/DrillView.jsx`, `src/components/DrillWizard.jsx`. Build clean.
+
+### P4 log
+- 2026-04-26: Workspaces — the persistence layer. New `src/data/workspaces.js` provides a unified workspace store backed by `localStorage["hld-workspaces"]` with CRUD: `listWorkspaces`, `getWorkspace`, `createWorkspace`, `updateWorkspace`, `deleteWorkspace`, `findDrillWorkspace`, `ensureDrillWorkspace`, `statusOf`. Workspace shape is a discriminated union by `kind` ('drill' | 'review'). `useWorkspaces` and `useWorkspace` hooks subscribe via in-page pubsub + `storage` event listener for cross-tab updates. One-time migration converts legacy `hld-drill-${caseId}` keys to drill workspaces (gated by `hld-workspaces-migrated-v1` flag). DrillWizard refactored to use the workspace API: state lives in the workspace; every edit persists immediately via `updateWorkspace`. DrillView's case picker now reads workspace status via `findDrillWorkspace`/`statusOf`. New `WorkspacesView` tab between Drill and Library: hero with "New system review" CTA, search box, in-progress/completed sections, per-row open + delete buttons, time-since-update display. TodayView (practicing flavor) gains an "Open workspaces" card listing up to 4 in-progress workspaces with deep-link to drill or review tab. App.jsx adds `openWorkspace()` handler that routes by kind. Build clean.

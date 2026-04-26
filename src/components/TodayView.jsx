@@ -5,6 +5,7 @@ import {
   Brain,
   CalendarDays,
   Flame,
+  Folder,
   Sparkles,
   Target,
   Wrench,
@@ -13,6 +14,8 @@ import { SKILLS } from "../data/skills.js";
 import { ALL_TERMS } from "../data/terms.js";
 import { LEARNING_PHASES } from "../data/learning.js";
 import { notesByType, getNote } from "../data/vaultIndex.js";
+import { statusOf, useWorkspaces } from "../data/workspaces.js";
+import { getCase } from "../data/drillCases.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 
 const DAY_MS = 86_400_000;
@@ -90,8 +93,14 @@ const DRILL_POOL = LEARNING_PHASES.flatMap((phase) =>
     : [],
 );
 
-export function TodayView({ onOpenNote, onJumpToTab, onSelectSkill }) {
+export function TodayView({
+  onOpenNote,
+  onJumpToTab,
+  onSelectSkill,
+  onOpenWorkspace,
+}) {
   const streak = useStreak(typeof window === "undefined" ? null : window.localStorage);
+  const { workspaces } = useWorkspaces();
 
   const dailyOutage = useMemo(() => {
     const outages = notesByType("outage");
@@ -106,12 +115,17 @@ export function TodayView({ onOpenNote, onJumpToTab, onSelectSkill }) {
     [dailyDrill],
   );
 
+  const openWorkspaces = workspaces
+    .filter((w) => statusOf(w) === "in-progress")
+    .slice(0, 4);
+
   const goSkill = (id) => {
     onSelectSkill?.(id);
     onJumpToTab?.("skills");
   };
 
   const goVocab = () => onJumpToTab?.("vocab");
+  const goWorkspaces = () => onJumpToTab?.("workspaces");
 
   return (
     <main className="stack">
@@ -233,15 +247,51 @@ export function TodayView({ onOpenNote, onJumpToTab, onSelectSkill }) {
         </article>
       </section>
 
+      {openWorkspaces.length > 0 && (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">
+                <Folder size={13} /> Open workspaces
+              </p>
+              <h2>{openWorkspaces.length} in progress</h2>
+            </div>
+            <button className="link-button" onClick={goWorkspaces}>
+              See all →
+            </button>
+          </div>
+          <ul className="today-workspace-list">
+            {openWorkspaces.map((w) => {
+              const drillCase = w.kind === "drill" ? getCase(w.caseId) : null;
+              const componentCount = w.drill?.components?.length || 0;
+              const constraintCount = Object.values(w.drill?.constraints || {}).filter(Boolean).length;
+              return (
+                <li key={w.id}>
+                  <button onClick={() => onOpenWorkspace?.(w)}>
+                    <Wrench size={14} />
+                    <div>
+                      <strong>{w.name}</strong>
+                      <small>
+                        {drillCase
+                          ? `${constraintCount}/8 constraints · ${componentCount} components`
+                          : w.kind}
+                      </small>
+                    </div>
+                    <ArrowRight size={14} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <section className="panel">
         <div className="section-heading">
           <div>
             <p className="eyebrow">The loop</p>
             <h2>Each visit, do one thing. Don't break the chain.</h2>
           </div>
-          <span className="pill">
-            <Wrench size={13} /> Workspaces ship in P4
-          </span>
         </div>
         <div className="learning-loop">
           {[

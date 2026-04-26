@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowRight, Sparkles, Wrench } from "lucide-react";
 import { DRILL_CASES } from "../data/drillCases.js";
+import { findDrillWorkspace, statusOf, useWorkspaces } from "../data/workspaces.js";
 import { DrillWizard } from "./DrillWizard.jsx";
 
 const DIFFICULTY_LABEL = {
@@ -9,43 +10,24 @@ const DIFFICULTY_LABEL = {
   advanced: "Advanced",
 };
 
-function caseProgress(caseId) {
-  try {
-    const raw = localStorage.getItem(`hld-drill-${caseId}`);
-    if (!raw) return null;
-    const state = JSON.parse(raw);
-    if (state?.completedAt) return "completed";
-    if (state?.components?.length || Object.values(state?.constraints || {}).some(Boolean)) {
-      return "in-progress";
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export function DrillView({ activeCaseId, onSelectCase, onOpenNote, theme, level }) {
-  const [progressTick, setProgressTick] = useState(0);
+  const { workspaces } = useWorkspaces();
 
-  const cases = useMemo(
-    () =>
-      DRILL_CASES.map((c) => ({
-        ...c,
-        status: caseProgress(c.id),
-      })),
-    [progressTick],
-  );
-
-  const refreshProgress = () => setProgressTick((t) => t + 1);
+  const cases = useMemo(() => {
+    return DRILL_CASES.map((c) => {
+      const ws = findDrillWorkspace(c.id);
+      const status = ws ? statusOf(ws) : null;
+      return { ...c, status, workspaceId: ws?.id ?? null };
+    });
+    // workspaces is read inside findDrillWorkspace; passing it in deps refreshes
+    // when the store changes
+  }, [workspaces]);
 
   if (activeCaseId) {
     return (
       <DrillWizard
         caseId={activeCaseId}
-        onExit={() => {
-          refreshProgress();
-          onSelectCase(null);
-        }}
+        onExit={() => onSelectCase(null)}
         onOpenNote={onOpenNote}
         theme={theme}
       />

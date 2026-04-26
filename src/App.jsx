@@ -7,6 +7,7 @@ import {
   ClipboardList,
   CalendarDays,
   FileText,
+  Folder,
   Moon,
   Network,
   NotebookPen,
@@ -32,11 +33,13 @@ import { SourceNoteLink } from "./components/SourceNoteLink.jsx";
 import { StarterPathToday } from "./components/StarterPathToday.jsx";
 import { LevelPicker } from "./components/LevelPicker.jsx";
 import { DrillView } from "./components/DrillView.jsx";
+import { WorkspacesView } from "./components/WorkspacesView.jsx";
 
 const tabs = [
   { id: "today", label: "Today", icon: CalendarDays },
   { id: "skills", label: "Skills", icon: Target },
   { id: "drill", label: "Drill", icon: Wrench },
+  { id: "workspaces", label: "Workspaces", icon: Folder },
   { id: "library", label: "Library", icon: BookText },
   { id: "vocab", label: "Vocabulary", icon: Brain },
   { id: "review", label: "Review System", icon: ClipboardList },
@@ -628,6 +631,18 @@ export default function App() {
     setActiveSkillId(id);
   };
 
+  const openWorkspace = (workspace) => {
+    if (!workspace) return;
+    if (workspace.kind === "drill" && workspace.caseId) {
+      setActiveCaseId(workspace.caseId);
+      setActiveTab("drill");
+    } else if (workspace.kind === "review") {
+      setActiveTab("review");
+    } else {
+      setActiveTab("workspaces");
+    }
+  };
+
   const markLessonComplete = (lessonNumber) => {
     setStarterProgress((current) => {
       const completed = current?.completedLessons ?? [];
@@ -670,8 +685,15 @@ export default function App() {
             onOpenNote={openNote}
             onJumpToTab={setActiveTab}
             onSelectSkill={selectSkill}
+            onOpenWorkspace={openWorkspace}
           />
         )
+      )}
+      {activeTab === "workspaces" && (
+        <WorkspacesView
+          onOpenWorkspace={openWorkspace}
+          onJumpToTab={setActiveTab}
+        />
       )}
       {activeTab === "skills" && (
         <SkillsView
