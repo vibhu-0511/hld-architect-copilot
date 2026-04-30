@@ -1,5 +1,7 @@
 # HLD Architect Co-pilot
 
+**Live demo:** [vibhu-0511.github.io/hld-architect-copilot](https://vibhu-0511.github.io/hld-architect-copilot/)
+
 A browser-based **system-design gym**. Practice architecting real systems, replay famous outages, hunt bugs in flawed designs, and run capacity numbers — grounded in a curated 255-note vault of system design knowledge.
 
 > **Goal:** stop reading about system design and start practicing it. Five minutes of drills a day beats a weekend marathon every quarter.
@@ -173,7 +175,7 @@ Append to `OUTAGE_REPLAYS` in [`src/data/outageReplays.js`](./src/data/outageRep
 >
 > Practice-first system-design platform built with React 19 + Vite + a custom Node-ESM indexer. Walks 255 markdown notes from an Obsidian vault and emits per-folder content chunks for code-split lazy loading. Features include a typed-design architecture linter (19 rules over a typed model, each citing real production outages), a 15-outage replay drill, a bug-finder drill with mixed real bugs + decoys, a capacity simulator that scales QPS at 2× / 10× / 100× / 1000× to surface the next bottleneck, and a workspace persistence layer with cross-tab sync. ~6K LOC. Multi-stage Docker, deployed on Vercel.
 >
-> Live: <your URL here>  ·  Source: <your repo URL>
+> Live: https://vibhu-0511.github.io/hld-architect-copilot/  ·  Source: https://github.com/vibhu-0511/hld-architect-copilot
 
 ---
 
