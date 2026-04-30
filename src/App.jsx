@@ -3,6 +3,8 @@ import {
   AlertTriangle,
   BookText,
   Brain,
+  Bug,
+  Calculator,
   CheckCircle2,
   ClipboardList,
   CalendarDays,
@@ -34,11 +36,17 @@ import { StarterPathToday } from "./components/StarterPathToday.jsx";
 import { LevelPicker } from "./components/LevelPicker.jsx";
 import { DrillView } from "./components/DrillView.jsx";
 import { WorkspacesView } from "./components/WorkspacesView.jsx";
+import { OutageReplayView } from "./components/OutageReplayView.jsx";
+import { BugFinderView } from "./components/BugFinderView.jsx";
+import { CapacityLabView } from "./components/CapacityLabView.jsx";
 
 const tabs = [
   { id: "today", label: "Today", icon: CalendarDays },
   { id: "skills", label: "Skills", icon: Target },
   { id: "drill", label: "Drill", icon: Wrench },
+  { id: "bugfinder", label: "Bug Finder", icon: Bug },
+  { id: "outage", label: "Outage", icon: AlertTriangle },
+  { id: "capacity", label: "Capacity", icon: Calculator },
   { id: "workspaces", label: "Workspaces", icon: Folder },
   { id: "library", label: "Library", icon: BookText },
   { id: "vocab", label: "Vocabulary", icon: Brain },
@@ -609,6 +617,18 @@ export default function App() {
     "hld-active-case",
     null,
   );
+  const [activeOutageId, setActiveOutageId] = useLocalStorage(
+    "hld-active-outage",
+    null,
+  );
+  const [activeBugScenarioId, setActiveBugScenarioId] = useLocalStorage(
+    "hld-active-bugscenario",
+    null,
+  );
+  const [capacityWorkspaceId, setCapacityWorkspaceId] = useLocalStorage(
+    "hld-active-capacity-workspace",
+    null,
+  );
   const [level, setLevel] = useLocalStorage("hld-level", null);
   const [starterProgress, setStarterProgress] = useLocalStorage(
     "hld-starter-progress",
@@ -636,11 +656,22 @@ export default function App() {
     if (workspace.kind === "drill" && workspace.caseId) {
       setActiveCaseId(workspace.caseId);
       setActiveTab("drill");
+    } else if (workspace.kind === "outage" && workspace.outageId) {
+      setActiveOutageId(workspace.outageId);
+      setActiveTab("outage");
+    } else if (workspace.kind === "bugfinder" && workspace.scenarioId) {
+      setActiveBugScenarioId(workspace.scenarioId);
+      setActiveTab("bugfinder");
     } else if (workspace.kind === "review") {
       setActiveTab("review");
     } else {
       setActiveTab("workspaces");
     }
+  };
+
+  const openOutageReplay = (outageId) => {
+    setActiveOutageId(outageId);
+    setActiveTab("outage");
   };
 
   const markLessonComplete = (lessonNumber) => {
@@ -686,6 +717,7 @@ export default function App() {
             onJumpToTab={setActiveTab}
             onSelectSkill={selectSkill}
             onOpenWorkspace={openWorkspace}
+            onOpenOutageReplay={openOutageReplay}
           />
         )
       )}
@@ -710,6 +742,29 @@ export default function App() {
           onOpenNote={openNote}
           theme={theme}
           level={level}
+        />
+      )}
+      {activeTab === "outage" && (
+        <OutageReplayView
+          activeOutageId={activeOutageId}
+          onSelectOutage={setActiveOutageId}
+          onOpenNote={openNote}
+          theme={theme}
+        />
+      )}
+      {activeTab === "bugfinder" && (
+        <BugFinderView
+          activeBugScenarioId={activeBugScenarioId}
+          onSelectScenario={setActiveBugScenarioId}
+          onOpenNote={openNote}
+        />
+      )}
+      {activeTab === "capacity" && (
+        <CapacityLabView
+          activeWorkspaceId={capacityWorkspaceId}
+          onSelectWorkspace={setCapacityWorkspaceId}
+          onOpenNote={openNote}
+          onJumpToTab={setActiveTab}
         />
       )}
       {activeTab === "library" && (

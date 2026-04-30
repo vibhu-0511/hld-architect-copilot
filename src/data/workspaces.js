@@ -146,6 +146,23 @@ export function findDrillWorkspace(caseId) {
   );
 }
 
+export function findOutageWorkspace(outageId) {
+  if (!outageId) return null;
+  return (
+    readAll().find((w) => w.kind === "outage" && w.outageId === outageId) ||
+    null
+  );
+}
+
+export function findBugFinderWorkspace(scenarioId) {
+  if (!scenarioId) return null;
+  return (
+    readAll().find(
+      (w) => w.kind === "bugfinder" && w.scenarioId === scenarioId,
+    ) || null
+  );
+}
+
 export function createWorkspace(partial) {
   const ws = {
     id: makeId("ws"),
@@ -178,6 +195,12 @@ export function updateWorkspace(id, patch) {
     review: patch.review
       ? { ...existing.review, ...patch.review }
       : existing.review,
+    outage: patch.outage
+      ? { ...existing.outage, ...patch.outage }
+      : existing.outage,
+    bugfinder: patch.bugfinder
+      ? { ...existing.bugfinder, ...patch.bugfinder }
+      : existing.bugfinder,
     updatedAt: nowISO(),
   };
   all[idx] = merged;
@@ -211,9 +234,60 @@ export function ensureDrillWorkspace(caseId) {
   });
 }
 
+export function ensureOutageWorkspace(outageId, outageTitle) {
+  if (!outageId) return null;
+  const existing = findOutageWorkspace(outageId);
+  if (existing) return existing;
+  return createWorkspace({
+    name: `${outageTitle || outageId} (replay)`,
+    kind: "outage",
+    outageId,
+    outage: {
+      step: 0,
+      currentAttempt: null,
+      attempts: [],
+    },
+  });
+}
+
+export function ensureBugFinderWorkspace(scenarioId, scenarioTitle) {
+  if (!scenarioId) return null;
+  const existing = findBugFinderWorkspace(scenarioId);
+  if (existing) return existing;
+  return createWorkspace({
+    name: `${scenarioTitle || scenarioId} (bug hunt)`,
+    kind: "bugfinder",
+    scenarioId,
+    bugfinder: {
+      step: 0,
+      currentAttempt: null,
+      attempts: [],
+    },
+  });
+}
+
 export function statusOf(workspace) {
   if (!workspace) return null;
   if (workspace.completedAt) return "completed";
+  if (
+    workspace.kind === "outage" &&
+    (workspace.outage?.attempts?.length || 0) > 0
+  ) {
+    const latest = workspace.outage.attempts[workspace.outage.attempts.length - 1];
+    if (latest?.reflectedAt && !workspace.outage.currentAttempt) {
+      return "completed";
+    }
+  }
+  if (
+    workspace.kind === "bugfinder" &&
+    (workspace.bugfinder?.attempts?.length || 0) > 0
+  ) {
+    const latest =
+      workspace.bugfinder.attempts[workspace.bugfinder.attempts.length - 1];
+    if (latest?.completedAt && !workspace.bugfinder.currentAttempt) {
+      return "completed";
+    }
+  }
   return "in-progress";
 }
 

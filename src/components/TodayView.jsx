@@ -16,6 +16,7 @@ import { LEARNING_PHASES } from "../data/learning.js";
 import { notesByType, getNote } from "../data/vaultIndex.js";
 import { statusOf, useWorkspaces } from "../data/workspaces.js";
 import { getCase } from "../data/drillCases.js";
+import { getReplayByPath } from "../data/outageReplays.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 
 const DAY_MS = 86_400_000;
@@ -98,6 +99,7 @@ export function TodayView({
   onJumpToTab,
   onSelectSkill,
   onOpenWorkspace,
+  onOpenOutageReplay,
 }) {
   const streak = useStreak(typeof window === "undefined" ? null : window.localStorage);
   const { workspaces } = useWorkspaces();
@@ -106,6 +108,10 @@ export function TodayView({
     const outages = notesByType("outage");
     return pickDaily(outages, 1);
   }, []);
+  const dailyOutageReplay = useMemo(
+    () => (dailyOutage ? getReplayByPath(dailyOutage.path) : null),
+    [dailyOutage],
+  );
 
   const dailyTerm = useMemo(() => pickDaily(ALL_TERMS, 2), []);
   const dailySkill = useMemo(() => pickDaily(SKILLS, 3), []);
@@ -185,12 +191,23 @@ export function TodayView({
                   ? "…"
                   : ""}
               </p>
-              <button
-                className="card-cta"
-                onClick={() => onOpenNote?.(dailyOutage.path)}
-              >
-                Read postmortem <ArrowRight size={14} />
-              </button>
+              {dailyOutageReplay ? (
+                <button
+                  className="card-cta"
+                  onClick={() =>
+                    onOpenOutageReplay?.(dailyOutageReplay.id)
+                  }
+                >
+                  Replay this outage <ArrowRight size={14} />
+                </button>
+              ) : (
+                <button
+                  className="card-cta"
+                  onClick={() => onOpenNote?.(dailyOutage.path)}
+                >
+                  Read postmortem <ArrowRight size={14} />
+                </button>
+              )}
             </>
           ) : (
             <p className="muted">No outages indexed.</p>
@@ -263,19 +280,23 @@ export function TodayView({
           <ul className="today-workspace-list">
             {openWorkspaces.map((w) => {
               const drillCase = w.kind === "drill" ? getCase(w.caseId) : null;
-              const componentCount = w.drill?.components?.length || 0;
-              const constraintCount = Object.values(w.drill?.constraints || {}).filter(Boolean).length;
+              let summary = w.kind;
+              if (drillCase) {
+                const componentCount = w.drill?.components?.length || 0;
+                const constraintCount = Object.values(w.drill?.constraints || {}).filter(Boolean).length;
+                summary = `${constraintCount}/8 constraints · ${componentCount} components`;
+              } else if (w.kind === "outage") {
+                const attempts = w.outage?.attempts?.length || 0;
+                const inFlight = w.outage?.currentAttempt ? " · resume" : "";
+                summary = `outage replay · ${attempts} attempt${attempts === 1 ? "" : "s"}${inFlight}`;
+              }
               return (
                 <li key={w.id}>
                   <button onClick={() => onOpenWorkspace?.(w)}>
                     <Wrench size={14} />
                     <div>
                       <strong>{w.name}</strong>
-                      <small>
-                        {drillCase
-                          ? `${constraintCount}/8 constraints · ${componentCount} components`
-                          : w.kind}
-                      </small>
+                      <small>{summary}</small>
                     </div>
                     <ArrowRight size={14} />
                   </button>

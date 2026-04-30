@@ -1,6 +1,8 @@
 import { useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
+  Bug,
   ClipboardList,
   Folder,
   Plus,
@@ -15,16 +17,22 @@ import {
   useWorkspaces,
 } from "../data/workspaces.js";
 import { getCase } from "../data/drillCases.js";
+import { getReplay } from "../data/outageReplays.js";
+import { getBugScenario } from "../data/bugScenarios.js";
 
 const KIND_LABEL = {
   drill: "Drill",
   review: "System review",
+  outage: "Outage replay",
+  bugfinder: "Bug Finder",
   note: "Note",
 };
 
 const KIND_ICON = {
   drill: Wrench,
   review: ClipboardList,
+  outage: AlertTriangle,
+  bugfinder: Bug,
   note: Folder,
 };
 
@@ -166,6 +174,10 @@ function WorkspaceRow({ workspace, onOpen, onDelete }) {
   const Icon = KIND_ICON[workspace.kind] || Folder;
   const drillCase =
     workspace.kind === "drill" ? getCase(workspace.caseId) : null;
+  const outageReplay =
+    workspace.kind === "outage" ? getReplay(workspace.outageId) : null;
+  const bugScenario =
+    workspace.kind === "bugfinder" ? getBugScenario(workspace.scenarioId) : null;
 
   let progress = null;
   if (workspace.kind === "drill" && workspace.drill) {
@@ -176,7 +188,23 @@ function WorkspaceRow({ workspace, onOpen, onDelete }) {
   } else if (workspace.kind === "review" && workspace.review) {
     const briefLen = (workspace.review.brief || "").length;
     progress = briefLen ? `${briefLen} chars` : "empty brief";
+  } else if (workspace.kind === "outage" && workspace.outage) {
+    const attemptCount = workspace.outage.attempts?.length || 0;
+    const inFlight = workspace.outage.currentAttempt ? " · attempt in progress" : "";
+    progress = `${attemptCount} attempt${attemptCount === 1 ? "" : "s"}${inFlight}`;
+  } else if (workspace.kind === "bugfinder" && workspace.bugfinder) {
+    const attemptCount = workspace.bugfinder.attempts?.length || 0;
+    const inFlight = workspace.bugfinder.currentAttempt ? " · hunt in progress" : "";
+    progress = `${attemptCount} hunt${attemptCount === 1 ? "" : "s"}${inFlight}`;
   }
+
+  const subType = drillCase
+    ? drillCase.difficulty
+    : outageReplay
+    ? `${outageReplay.year} · ${outageReplay.difficulty}`
+    : bugScenario
+    ? bugScenario.difficulty
+    : null;
 
   return (
     <li className="workspace-row">
@@ -188,7 +216,7 @@ function WorkspaceRow({ workspace, onOpen, onDelete }) {
           <strong>{workspace.name}</strong>
           <small>
             {KIND_LABEL[workspace.kind] || workspace.kind}
-            {drillCase ? ` · ${drillCase.difficulty}` : ""}
+            {subType ? ` · ${subType}` : ""}
             {progress ? ` · ${progress}` : ""}
             {" · "}
             updated {formatTime(workspace.updatedAt)}
