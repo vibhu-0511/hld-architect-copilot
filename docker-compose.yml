@@ -1,0 +1,12 @@
+# Local one-command run: `docker compose up`
+# Open http://localhost:8080
+
+services:
+  hld-architect:
+    build:
+      context: .
+    image: hld-architect-copilot:latest
+    container_name: hld-architect-copilot
+    ports:
+      - "8080:80"
+    restart: unless-stopped
