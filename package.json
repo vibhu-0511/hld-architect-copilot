@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "index:vault": "node scripts/buildVaultIndex.mjs",
     "predev": "node scripts/buildVaultIndex.mjs",
-    "prebuild": "node scripts/buildVaultIndex.mjs"
+    "prebuild": "node scripts/buildVaultIndex.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
@@ -20,5 +21,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "vite": "^7.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
   }
 }
