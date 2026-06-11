@@ -20,7 +20,7 @@ A browser-based **system-design gym**. Practice architecting real systems, repla
 | **Capacity** | Capacity calculator (storage / bandwidth / IOPS / cost band), bottleneck simulator at 2× / 10× / 100× / 1000×, phased canvas showing how the architecture must evolve. |
 | **Workspaces** | Persistence layer for everything you start. Drill attempts, outage replays, bug hunts, system reviews — all live here, all in localStorage, all resumable. |
 | **Library** | The full 255-note vault rendered in-app: folder tree, full-text search, backlinks, code highlighting, and Mermaid diagrams. |
-| **Vocabulary** | 100+ system-design terms with beginner / what / when / not-when / cost / example, plus flashcards. |
+| **Vocabulary** | Curated terms with beginner / what / when / not-when / cost / example, plus flashcards and a spaced-repetition review queue. |
 | **Review System** | Paste an architecture brief, get findings sorted by severity. |
 | **Proposal** | Turn review findings into a founder-facing recommendation draft. |
 | **Notes** | Personal note-taking with templates, attached to phases / cases / bugs. |

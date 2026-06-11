@@ -562,7 +562,7 @@ function RevealStep({
 
       <div className="outage-postmortem-inline">
         <NoteReader
-          path={replay.path}
+          notePath={replay.path}
           theme={theme}
           onOpenNote={onOpenNote}
         />

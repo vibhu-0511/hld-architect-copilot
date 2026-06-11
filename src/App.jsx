@@ -73,10 +73,10 @@ function Header({ activeTab, onTabChange, theme, onToggleTheme }) {
     <header className="app-header">
       <div>
         <p className="eyebrow">HLD Architect Co-pilot</p>
-        <h1>Learn system design by reviewing real systems.</h1>
+        <h1>Practice system design like a gym, not a course.</h1>
         <p className="header-copy">
-          A beginner-first workbench for moving from notes to practical architecture decisions,
-          risks, trade-offs, and founder-ready recommendations.
+          Daily drills, outage replays, bug hunts, and capacity math — grounded in a
+          255-note vault. Five minutes a day beats a weekend marathon.
         </p>
       </div>
       <div className="header-actions">
