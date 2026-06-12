@@ -143,20 +143,6 @@ textarea:focus-visible,
   padding: 28px 0 48px;
 }
 
-.app-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
-  align-items: end;
-  margin-bottom: 24px;
-}
-
-.header-actions {
-  display: grid;
-  gap: 10px;
-  justify-items: end;
-}
-
 .eyebrow {
   margin: 0 0 8px;
   color: var(--green);
@@ -193,23 +179,6 @@ h3 {
   font-size: 16px;
 }
 
-.header-copy {
-  max-width: 760px;
-  margin-bottom: 0;
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1.55;
-}
-
-.tabbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.tab-button,
-.theme-toggle,
 .segmented button,
 .filter-row button,
 .button-row button,
@@ -234,12 +203,6 @@ h3 {
     border-color 0.15s ease;
 }
 
-.tab-button {
-  padding: 9px 12px;
-}
-
-.tab-button:hover,
-.theme-toggle:hover,
 .segmented button:hover,
 .filter-row button:hover,
 .button-row button:hover,
@@ -250,18 +213,12 @@ h3 {
   border-color: #b7ad9d;
 }
 
-.tab-button.is-active,
 .segmented button.is-active,
 .filter-row button.is-active,
 .lab-mode-tabs button.is-active {
   background: var(--ink);
   color: var(--bg);
   border-color: var(--ink);
-}
-
-.theme-toggle {
-  min-height: 36px;
-  padding: 8px 12px;
 }
 
 .stack {
@@ -1168,7 +1125,6 @@ select {
 }
 
 @media (max-width: 900px) {
-  .app-header,
   .hero-workspace,
   .two-column,
   .review-layout,
@@ -1179,8 +1135,6 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .tabbar,
-  .header-actions,
   .lab-mode-tabs {
     justify-content: flex-start;
     justify-items: start;
@@ -1205,10 +1159,6 @@ select {
   .hero-workspace,
   .proposal-card {
     padding: 16px;
-  }
-
-  .tab-button span {
-    display: none;
   }
 
   .vault-grid,
@@ -4316,3 +4266,71 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* App shell with sidebar */
+.app-layout {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  min-height: 100vh;
+  width: min(1400px, 100%);
+  margin: 0 auto;
+}
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-3);
+  border-right: 1px solid var(--border);
+  background: var(--panel-glass);
+}
+.sidebar-brand { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+.sidebar-logo {
+  display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  background: var(--ink); color: var(--panel);
+  font-size: 11px; font-weight: 700;
+}
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: var(--space-4); overflow-y: auto; }
+.sidebar-group-label {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  width: 100%; padding: 7px 10px; border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink); cursor: pointer;
+  font-size: var(--text-sm); text-align: left;
+}
+.sidebar-item:hover { background: var(--soft); }
+.sidebar-item.is-active { background: var(--chip-bg); color: var(--chip-ink); font-weight: 600; }
+.sidebar-theme {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  background: var(--soft); color: var(--ink); cursor: pointer; font-size: var(--text-sm);
+}
+.app-main { padding: var(--space-5); min-width: 0; }
+
+@media (max-width: 760px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .app-sidebar {
+    position: sticky; top: 0; z-index: 50;
+    height: auto; flex-direction: row; align-items: center;
+    padding: var(--space-2) var(--space-3);
+    border-right: 0; border-bottom: 1px solid var(--border);
+  }
+  .sidebar-brand strong { display: none; }
+  .sidebar-nav { flex-direction: row; gap: var(--space-1); overflow-x: auto; }
+  .sidebar-group { display: flex; gap: var(--space-1); }
+  .sidebar-group-label { display: none; }
+  .sidebar-item span { display: none; }
+  .sidebar-theme span { display: none; }
+  .app-main { padding: var(--space-3); }
+}
+
+/* Error boundary */
+.tab-error { display: grid; gap: var(--space-3); justify-items: start; }
+.tab-error pre { white-space: pre-wrap; background: var(--danger-bg); color: var(--danger-ink); padding: var(--space-3); border-radius: var(--radius-sm); width: 100%; }

@@ -1,28 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
-  BookText,
-  Brain,
-  Bug,
-  Calculator,
   CheckCircle2,
-  ClipboardList,
-  CalendarDays,
-  FileText,
-  Folder,
-  Moon,
   Network,
-  NotebookPen,
   Plus,
   RefreshCw,
   Save,
   Search,
   Shuffle,
   Sparkles,
-  Sun,
-  Target,
   Trash2,
-  Wrench,
 } from "lucide-react";
 import { ALL_TERMS, CATEGORIES } from "./data/terms.js";
 import { NOTE_TEMPLATES, REVIEW_CATEGORIES } from "./data/learning.js";
@@ -39,21 +26,8 @@ import { WorkspacesView } from "./components/WorkspacesView.jsx";
 import { OutageReplayView } from "./components/OutageReplayView.jsx";
 import { BugFinderView } from "./components/BugFinderView.jsx";
 import { CapacityLabView } from "./components/CapacityLabView.jsx";
-
-const tabs = [
-  { id: "today", label: "Today", icon: CalendarDays },
-  { id: "skills", label: "Skills", icon: Target },
-  { id: "drill", label: "Drill", icon: Wrench },
-  { id: "bugfinder", label: "Bug Finder", icon: Bug },
-  { id: "outage", label: "Outage", icon: AlertTriangle },
-  { id: "capacity", label: "Capacity", icon: Calculator },
-  { id: "workspaces", label: "Workspaces", icon: Folder },
-  { id: "library", label: "Library", icon: BookText },
-  { id: "vocab", label: "Vocabulary", icon: Brain },
-  { id: "review", label: "Review System", icon: ClipboardList },
-  { id: "proposal", label: "Proposal", icon: FileText },
-  { id: "notes", label: "Notes", icon: NotebookPen },
-];
+import { AppSidebar } from "./components/AppSidebar.jsx";
+import { TabErrorBoundary } from "./components/TabErrorBoundary.jsx";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -66,43 +40,6 @@ function stableShuffle(items) {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
-}
-
-function Header({ activeTab, onTabChange, theme, onToggleTheme }) {
-  return (
-    <header className="app-header">
-      <div>
-        <p className="eyebrow">HLD Architect Co-pilot</p>
-        <h1>Practice system design like a gym, not a course.</h1>
-        <p className="header-copy">
-          Daily drills, outage replays, bug hunts, and capacity math — grounded in a
-          255-note vault. Five minutes a day beats a weekend marathon.
-        </p>
-      </div>
-      <div className="header-actions">
-        <button className="theme-toggle" onClick={onToggleTheme} title="Toggle dark mode">
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          <span>{theme === "dark" ? "Light" : "Dark"}</span>
-        </button>
-        <nav className="tabbar" aria-label="Primary">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                className={cx("tab-button", activeTab === tab.id && "is-active")}
-                onClick={() => onTabChange(tab.id)}
-                title={tab.label}
-              >
-                <Icon size={16} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-    </header>
-  );
 }
 
 function NotesView() {
@@ -695,13 +632,15 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <Header
+    <div className="app-layout">
+      <AppSidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
         theme={theme}
         onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
       />
+      <div className="app-main">
+      <TabErrorBoundary tabKey={activeTab}>
       {activeTab === "today" && (
         level === "beginner" ? (
           <StarterPathToday
@@ -785,6 +724,8 @@ export default function App() {
       )}
       {activeTab === "proposal" && <ProposalView reviewText={reviewText} systemName={systemName} />}
       {activeTab === "notes" && <NotesView />}
+      </TabErrorBoundary>
+      </div>
     </div>
   );
 }
