@@ -28,6 +28,25 @@
   --violet: #7c3aed;
   --yellow: #d99a21;
   --shadow: 0 18px 50px rgba(44, 38, 24, 0.09);
+  /* spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  /* type scale */
+  --text-xs: 12px;
+  --text-sm: 13.5px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  /* radii + borders */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 2px 8px rgba(44, 38, 24, 0.06);
 }
 
 :root[data-theme="dark"] {
@@ -58,6 +77,7 @@
   --violet: #c3a5ff;
   --yellow: #ffd166;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -102,6 +122,19 @@ select {
 
 button {
   border: 0;
+}
+
+h1 { font-size: var(--text-2xl); line-height: 1.15; margin: 0 0 var(--space-2); }
+h2 { font-size: var(--text-xl); line-height: 1.2; margin: 0 0 var(--space-2); }
+h3 { font-size: var(--text-lg); line-height: 1.25; margin: 0 0 var(--space-1); }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .app-shell {
@@ -242,13 +275,14 @@ h3 {
 .proposal-card,
 .hero-workspace {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--panel-glass);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .panel {
   padding: 22px;
+  border-radius: var(--radius-lg);
 }
 
 .section-heading {
@@ -484,9 +518,10 @@ h3 {
 .vault-card {
   min-height: 210px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--input-bg);
   padding: 14px;
+  box-shadow: var(--shadow-sm);
 }
 
 .vault-card-top {
@@ -1742,12 +1777,12 @@ select {
 .today-card {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .today-card header {
@@ -2453,12 +2488,13 @@ select {
 .drill-case-card {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 18px 20px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: var(--shadow-sm);
   transition: transform 0.15s, border-color 0.15s;
 }
 
@@ -2833,7 +2869,7 @@ select {
 
 .finding-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   background: var(--panel);
 }
