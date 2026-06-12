@@ -202,6 +202,150 @@ export const DRILL_CASES = [
       "Webhook handlers must be idempotent and dedupe; verify signatures.",
     ],
   },
+  {
+    id: "ticketmaster",
+    title: "Ticket Booking (Flash Sale)",
+    blurb:
+      "Like Ticketmaster on tour-announcement day. Huge read spike, strict no-double-sell guarantee.",
+    difficulty: "advanced",
+    prompt:
+      "Design ticket booking for a 50K-seat venue where 2M people arrive in the first 10 minutes. No seat may be sold twice. Browsing can lag; checkout cannot oversell.",
+    refCasePath: "05_case_studies/design_ticketmaster.md",
+    suggestedConstraints: {
+      qpsRead: "200000", qpsWrite: "3000", latencyP95: "500",
+      consistency: "strong", durability: "high", cost: "high",
+      team: "15", growth: "stable",
+    },
+    expectedComponents: [
+      "cdn", "load-balancer", "api-gateway", "rate-limiter",
+      "api-server", "cache", "sql-database", "message-queue", "kv-store",
+    ],
+    keyInsights: [
+      "Browsing is eventually consistent and heavily cached; only seat-hold + purchase need strong consistency.",
+      "A virtual waiting room (queue) absorbs the spike so the booking core sees bounded traffic.",
+      "Seat holds are short-TTL locks in a KV store; the DB transaction is the final arbiter.",
+    ],
+  },
+  {
+    id: "google-docs",
+    title: "Collaborative Docs",
+    blurb:
+      "Real-time collaborative editing like Google Docs. Multiple cursors, zero lost keystrokes.",
+    difficulty: "advanced",
+    prompt:
+      "Design a collaborative document editor supporting 50 concurrent editors per doc and 10M total docs. Edits must converge within 200ms for co-located users. Offline editing must merge on reconnect.",
+    refCasePath: "05_case_studies/design_google_docs.md",
+    suggestedConstraints: {
+      qpsRead: "50000", qpsWrite: "20000", latencyP95: "200",
+      consistency: "eventual", durability: "high", cost: "medium",
+      team: "10", growth: "10x",
+    },
+    expectedComponents: [
+      "load-balancer", "api-gateway", "api-server",
+      "sql-database", "kv-store", "pub-sub", "blob-storage", "cache",
+    ],
+    keyInsights: [
+      "OT or CRDT algorithms resolve concurrent edits deterministically — the server is the sequencer.",
+      "WebSocket connections deliver real-time presence and character-level updates; HTTP is only for load/save.",
+      "Document snapshots go to blob storage periodically; the operation log is the source of truth between snapshots.",
+    ],
+  },
+  {
+    id: "video-streaming",
+    title: "Video Streaming",
+    blurb:
+      "Upload, transcode, and stream video at scale. ABR adapts quality to every viewer's bandwidth.",
+    difficulty: "intermediate",
+    prompt:
+      "Design a video streaming platform handling 10K uploads/day and 1M concurrent viewers. Videos must be playable within 5 minutes of upload. Adaptive bitrate streaming across mobile and desktop.",
+    refCasePath: "05_case_studies/design_video_streaming.md",
+    suggestedConstraints: {
+      qpsRead: "100000", qpsWrite: "500", latencyP95: "200",
+      consistency: "eventual", durability: "high", cost: "high",
+      team: "12", growth: "10x",
+    },
+    expectedComponents: [
+      "cdn", "load-balancer", "api-server", "blob-storage",
+      "message-queue", "worker", "sql-database", "cache",
+    ],
+    keyInsights: [
+      "Upload and transcode are async — a message queue decouples ingest from the CPU-heavy encoding pipeline.",
+      "CDN handles 95%+ of read traffic; origin serves only cache misses and manifest files.",
+      "Adaptive bitrate (HLS/DASH) chunks video into 2-10s segments at multiple qualities; the player switches seamlessly.",
+    ],
+  },
+  {
+    id: "web-crawler",
+    title: "Web Crawler",
+    blurb:
+      "Crawl billions of pages without hammering any single host. Politeness, dedup, and frontier management.",
+    difficulty: "intermediate",
+    prompt:
+      "Design a web crawler that indexes 1B pages/month. Must respect robots.txt, avoid duplicate crawls, and prioritize fresh/important pages. Budget: 1000 crawler nodes.",
+    refCasePath: "05_case_studies/design_web_crawler.md",
+    suggestedConstraints: {
+      qpsRead: "400", qpsWrite: "400", latencyP95: "2000",
+      consistency: "eventual", durability: "medium", cost: "medium",
+      team: "8", growth: "stable",
+    },
+    expectedComponents: [
+      "message-queue", "worker", "kv-store",
+      "blob-storage", "sql-database", "cache",
+    ],
+    keyInsights: [
+      "The frontier queue prioritizes URLs by freshness, PageRank, and domain politeness intervals.",
+      "Bloom filters or content hashing deduplicates URLs and page content cheaply at scale.",
+      "Per-host rate limiting (politeness) is critical — without it you'll get IP-banned and skew crawl coverage.",
+    ],
+  },
+  {
+    id: "logging-pipeline",
+    title: "Logging Pipeline",
+    blurb:
+      "Ingest millions of log lines per second. Hot storage for search, cold archive for compliance.",
+    difficulty: "intermediate",
+    prompt:
+      "Design a centralized logging system ingesting 2M events/second from 5000 microservices. Support full-text search over the last 7 days and cold storage for 1 year. Alert on error rate spikes.",
+    refCasePath: "05_case_studies/design_logging_system.md",
+    suggestedConstraints: {
+      qpsRead: "10000", qpsWrite: "2000000", latencyP95: "1000",
+      consistency: "eventual", durability: "high", cost: "medium",
+      team: "6", growth: "10x",
+    },
+    expectedComponents: [
+      "pub-sub", "worker", "search-index",
+      "blob-storage", "kv-store", "observability",
+    ],
+    keyInsights: [
+      "Pub/sub (Kafka-class) is the backbone — it decouples ingest from indexing/archival consumers.",
+      "Hot tier (search index, 7 days) vs cold tier (blob/object storage, 1 year) keeps costs sane.",
+      "Sampling and aggregation at the edge reduces volume before it hits the pipeline — not every DEBUG line matters.",
+    ],
+  },
+  {
+    id: "google-maps",
+    title: "Maps & ETA",
+    blurb:
+      "Serve map tiles, compute routes, and estimate arrival times with live traffic data.",
+    difficulty: "advanced",
+    prompt:
+      "Design a maps service covering 200 countries. Pre-rendered tiles for browsing, real-time routing with live traffic, and ETA predictions accurate to ±2 minutes for trips under 30 min.",
+    refCasePath: "05_case_studies/design_google_maps.md",
+    suggestedConstraints: {
+      qpsRead: "500000", qpsWrite: "50000", latencyP95: "300",
+      consistency: "eventual", durability: "medium", cost: "high",
+      team: "20", growth: "stable",
+    },
+    expectedComponents: [
+      "cdn", "load-balancer", "api-gateway", "api-server",
+      "cache", "kv-store", "pub-sub", "worker", "blob-storage",
+    ],
+    keyInsights: [
+      "Map tiles are static pre-rendered images served from CDN — the read path is a cache lookup, not a computation.",
+      "Live traffic data ingested async via pub/sub; GPS pings from drivers update edge weights in near-real-time.",
+      "Routing uses hierarchical graph algorithms (contraction hierarchies) — you don't Dijkstra the entire planet per query.",
+    ],
+  },
 ];
 
 // Component palette. Categorized so users orient by layer.
