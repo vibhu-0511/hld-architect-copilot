@@ -26,6 +26,7 @@ import { WorkspacesView } from "./components/WorkspacesView.jsx";
 import { OutageReplayView } from "./components/OutageReplayView.jsx";
 import { BugFinderView } from "./components/BugFinderView.jsx";
 import { CapacityLabView } from "./components/CapacityLabView.jsx";
+import { NapkinQuizView } from "./components/NapkinQuizView.jsx";
 import { AppSidebar } from "./components/AppSidebar.jsx";
 import { TabErrorBoundary } from "./components/TabErrorBoundary.jsx";
 
@@ -566,6 +567,7 @@ export default function App() {
     "hld-active-capacity-workspace",
     null,
   );
+  const [napkinOpen, setNapkinOpen] = useLocalStorage("hld-napkin-open", false);
   const [level, setLevel] = useLocalStorage("hld-level", null);
   const [starterProgress, setStarterProgress] = useLocalStorage(
     "hld-starter-progress",
@@ -675,13 +677,18 @@ export default function App() {
         />
       )}
       {activeTab === "drill" && (
-        <DrillView
-          activeCaseId={activeCaseId}
-          onSelectCase={setActiveCaseId}
-          onOpenNote={openNote}
-          theme={theme}
-          level={level}
-        />
+        napkinOpen ? (
+          <NapkinQuizView onExit={() => setNapkinOpen(false)} onOpenNote={openNote} />
+        ) : (
+          <DrillView
+            activeCaseId={activeCaseId}
+            onSelectCase={setActiveCaseId}
+            onOpenNote={openNote}
+            theme={theme}
+            level={level}
+            onOpenNapkin={() => setNapkinOpen(true)}
+          />
+        )
       )}
       {activeTab === "outage" && (
         <OutageReplayView
