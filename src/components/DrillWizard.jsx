@@ -10,6 +10,7 @@ import {
   Plus,
   Trash2,
   X,
+  Zap,
 } from "lucide-react";
 import {
   COMPONENT_PALETTE,
@@ -19,6 +20,8 @@ import {
   getCase,
 } from "../data/drillCases.js";
 import { lintDrill, diffComponents } from "../lib/drillLinter.js";
+import { scoreDrill } from "../lib/drillScore.js";
+import { KATA_TWISTS } from "../data/kataTwists.js";
 import {
   ensureDrillWorkspace,
   updateWorkspace,
@@ -160,8 +163,24 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
       rubric: { ...drill.rubric, [rubricId]: !drill.rubric?.[rubricId] },
     });
 
-  const useSuggestedConstraints = () =>
-    persist({ constraints: { ...drillCase.suggestedConstraints } });
+  const kataTwist = drill.kata?.twistId
+    ? KATA_TWISTS.find((t) => t.id === drill.kata.twistId) || null
+    : null;
+
+  const toggleKata = () => {
+    if (kataTwist) {
+      persist({ kata: null });
+    } else {
+      const twist = KATA_TWISTS[Math.floor(Math.random() * KATA_TWISTS.length)];
+      persist({ kata: { twistId: twist.id, adr: "" } });
+    }
+  };
+
+  const useSuggestedConstraints = () => {
+    let c = { ...drillCase.suggestedConstraints };
+    if (kataTwist) c = kataTwist.mutate(c);
+    persist({ constraints: c });
+  };
 
   const markComplete = () => {
     if (!workspace) return;
@@ -189,6 +208,20 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
         </p>
         <h1>{drillCase.title}</h1>
         <p>{drillCase.prompt}</p>
+        <div className="button-row">
+          <button className={kataTwist ? "is-active" : ""} onClick={toggleKata}>
+            <Zap size={14} /> {kataTwist ? "Kata ON" : "Kata mode"}
+          </button>
+        </div>
+        {kataTwist && (
+          <div className="kata-banner">
+            <Zap size={14} />
+            <div>
+              <strong>Kata twist: {kataTwist.label}</strong>
+              <p>{kataTwist.description}</p>
+            </div>
+          </div>
+        )}
         <Stepper step={step} onJump={setStep} />
       </section>
 
@@ -224,6 +257,8 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
           onReset={resetCase}
           onOpenNote={onOpenNote}
           theme={theme}
+          kata={drill.kata || null}
+          onUpdateKataAdr={(adr) => persist({ kata: { ...drill.kata, adr } })}
         />
       )}
     </main>
@@ -513,7 +548,13 @@ function ReviewStep({
   onReset,
   onOpenNote,
   theme,
+  kata,
+  onUpdateKataAdr,
 }) {
+  const score = useMemo(
+    () => scoreDrill(state, drillCase.expectedComponents || []),
+    [state, drillCase.expectedComponents],
+  );
   const findings = useMemo(() => lintDrill(state), [state]);
   const componentDiff = useMemo(
     () =>
@@ -536,6 +577,25 @@ function ReviewStep({
 
   return (
     <section className="drill-step drill-review-grid">
+      <div className="panel drill-score-panel">
+        <div className="drill-score-total">
+          <span className="eyebrow">Design score</span>
+          <strong>{score.total}</strong>
+          <span className={`verdict-pill verdict-${score.verdict.replace(/\s+/g, "-").toLowerCase()}`}>
+            {score.verdict}
+          </span>
+        </div>
+        <div className="drill-score-axes">
+          {Object.entries(score.axes).map(([axis, value]) => (
+            <div key={axis} className="drill-score-axis">
+              <span>{axis === "tradeoffs" ? "trade-offs" : axis}</span>
+              <div className="axis-bar"><i style={{ width: `${value}%` }} /></div>
+              <small>{value}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="panel">
         <div className="section-heading">
           <div>
@@ -657,6 +717,18 @@ function ReviewStep({
           })}
         </ul>
 
+        {kata && (
+          <label className="field-label">
+            ADR — defend how your design absorbs the twist (min 200 chars)
+            <textarea
+              rows={8}
+              value={kata.adr || ""}
+              onChange={(e) => onUpdateKataAdr(e.target.value)}
+              placeholder={"Context:\nDecision:\nAlternatives considered:\nConsequences / what we give up:\nRevisit when:"}
+            />
+          </label>
+        )}
+
         <div className="drill-step-footer">
           <button className="link-button" onClick={onBack}>
             <ArrowLeft size={14} /> Back to components
@@ -667,7 +739,7 @@ function ReviewStep({
           <button
             className="primary-cta"
             onClick={onMarkComplete}
-            disabled={!!state.completedAt}
+            disabled={!!state.completedAt || (kata && (kata.adr || "").length < 200)}
           >
             <CheckCircle2 size={14} />
             {state.completedAt ? "Drill marked complete" : "Mark drill complete"}
