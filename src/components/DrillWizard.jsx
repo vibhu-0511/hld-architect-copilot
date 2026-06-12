@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
   Zap,
+  Timer,
 } from "lucide-react";
 import {
   COMPONENT_PALETTE,
@@ -21,6 +22,7 @@ import {
 } from "../data/drillCases.js";
 import { lintDrill, diffComponents } from "../lib/drillLinter.js";
 import { scoreDrill } from "../lib/drillScore.js";
+import { useCountdown, formatRemaining } from "../lib/useCountdown.js";
 import { KATA_TWISTS } from "../data/kataTwists.js";
 import {
   ensureDrillWorkspace,
@@ -31,7 +33,7 @@ import {
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { NoteReader } from "./NoteReader.jsx";
 
-const STEP_LABELS = ["Constraints", "Components", "Review"];
+const STEP_LABELS = ["Constraints", "Entities & API", "Components", "Deep dive", "Review"];
 
 const CONSISTENCY_OPTIONS = [
   { value: "strong", label: "Strong (linearizable, ACID)" },
@@ -74,7 +76,10 @@ const EMPTY_DRILL = {
     team: "",
     growth: "",
   },
+  entities: "",
+  api: "",
   components: [],
+  deepDive: { failure: "", scale: "" },
   rubric: {},
   step: 0,
 };
@@ -167,6 +172,25 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
     ? KATA_TWISTS.find((t) => t.id === drill.kata.twistId) || null
     : null;
 
+  const toggleInterview = () => {
+    if (drill.interview) {
+      persist({ interview: null });
+    } else {
+      persist({ interview: { startedAt: Date.now(), durationMin: 45 } });
+    }
+  };
+
+  const deadline = drill.interview ? drill.interview.startedAt + drill.interview.durationMin * 60000 : null;
+  const remaining = useCountdown(deadline);
+
+  useEffect(() => {
+    if (deadline && remaining === 0 && step < 4) {
+      setStep(4);
+    }
+  }, [remaining, deadline, step]);
+
+  const timerTone = remaining > 15 * 60000 ? "tone-success" : remaining > 5 * 60000 ? "tone-warning" : "tone-danger";
+
   const toggleKata = () => {
     if (kataTwist) {
       persist({ kata: null });
@@ -212,6 +236,15 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
           <button className={kataTwist ? "is-active" : ""} onClick={toggleKata}>
             <Zap size={14} /> {kataTwist ? "Kata ON" : "Kata mode"}
           </button>
+          <button className={drill.interview ? "is-active" : ""} onClick={toggleInterview}>
+            <Timer size={14} /> {drill.interview ? "Interview ON" : "Interview mode"}
+          </button>
+          {drill.interview && (
+            <span className={`timer-pill ${timerTone}`}>
+              <Timer size={13} />
+              {remaining > 0 ? formatRemaining(remaining) : "Time!"}
+            </span>
+          )}
         </div>
         {kataTwist && (
           <div className="kata-banner">
@@ -236,29 +269,48 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
       )}
 
       {step === 1 && (
-        <ComponentsStep
-          drillCase={drillCase}
-          components={state.components || []}
-          onAdd={addComponent}
-          onRemove={removeComponent}
-          onUpdate={updateComponent}
+        <EntitiesStep
+          drill={drill}
+          onChange={(patch) => persist(patch)}
           onBack={() => setStep(0)}
           onNext={() => setStep(2)}
         />
       )}
 
       {step === 2 && (
+        <ComponentsStep
+          drillCase={drillCase}
+          components={state.components || []}
+          onAdd={addComponent}
+          onRemove={removeComponent}
+          onUpdate={updateComponent}
+          onBack={() => setStep(1)}
+          onNext={() => setStep(3)}
+        />
+      )}
+
+      {step === 3 && (
+        <DeepDiveStep
+          drill={drill}
+          onChange={(patch) => persist(patch)}
+          onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+        />
+      )}
+
+      {step === 4 && (
         <ReviewStep
           drillCase={drillCase}
           state={state}
           onToggleRubric={toggleRubric}
           onMarkComplete={markComplete}
-          onBack={() => setStep(1)}
+          onBack={() => setStep(3)}
           onReset={resetCase}
           onOpenNote={onOpenNote}
           theme={theme}
           kata={drill.kata || null}
           onUpdateKataAdr={(adr) => persist({ kata: { ...drill.kata, adr } })}
+          drill={drill}
         />
       )}
     </main>
@@ -282,6 +334,79 @@ function Stepper({ step, onJump }) {
         </button>
       ))}
     </div>
+  );
+}
+
+function EntitiesStep({ drill, onChange, onBack, onNext }) {
+  const okEntities = (drill.entities || "").trim().length >= 40;
+  const okApi = (drill.api || "").trim().length >= 40;
+  return (
+    <section className="panel drill-step">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Step 2</p>
+          <h2>Name the entities. Sketch the API.</h2>
+        </div>
+      </div>
+      <p className="muted">
+        Before boxes: what data exists, and what operations touch it? This is
+        the step interviewers say candidates skip most.
+      </p>
+      <label className="field-label">
+        Core entities (one per line: name — key fields — owner of truth)
+        <textarea rows={5} value={drill.entities || ""} onChange={(e) => onChange({ entities: e.target.value })}
+          placeholder={"User — id, email — Users DB\nShortLink — code, longUrl, ownerId — Links DB\nClickEvent — code, ts, ua — analytics store (derived)"} />
+      </label>
+      <label className="field-label">
+        API sketch (method path → behavior, one per line)
+        <textarea rows={5} value={drill.api || ""} onChange={(e) => onChange({ api: e.target.value })}
+          placeholder={"POST /links {longUrl} → 201 {code}\nGET /{code} → 302 Location: longUrl\nGET /links/{code}/stats → 200 {clicks}"} />
+      </label>
+      <div className="drill-step-footer">
+        <button className="link-button" onClick={onBack}><ArrowLeft size={14} /> Back</button>
+        <span className={`muted ${okEntities && okApi ? "is-ok" : ""}`}>
+          {okEntities && okApi ? "Entities and API stated." : "Both boxes need real content (≥40 chars each)."}
+        </span>
+        <button className="primary-cta" disabled={!okEntities || !okApi} onClick={onNext}>
+          Continue to Components <ArrowRight size={14} />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function DeepDiveStep({ drill, onChange, onBack, onNext }) {
+  const dd = drill.deepDive || { failure: "", scale: "" };
+  const okFailure = (dd.failure || "").trim().length >= 60;
+  const okScale = (dd.scale || "").trim().length >= 60;
+  return (
+    <section className="panel drill-step">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Step 4</p>
+          <h2>Deep dive — failure and scale.</h2>
+        </div>
+      </div>
+      <label className="field-label">
+        Failure analysis — pick your most critical component. Walk what users see when it is slow, dead, and partitioned — and what limits the blast radius.
+        <textarea rows={6} value={dd.failure} onChange={(e) => onChange({ deepDive: { ...dd, failure: e.target.value } })}
+          placeholder="If the database goes down, writes queue in the message broker for up to 5 minutes..." />
+      </label>
+      <label className="field-label">
+        Scale plan — traffic is 10× tomorrow morning. What breaks first, how do you know (which metric), and what is the first fix?
+        <textarea rows={6} value={dd.scale} onChange={(e) => onChange({ deepDive: { ...dd, scale: e.target.value } })}
+          placeholder="The API servers hit CPU saturation first (p95 latency crosses SLO). Horizontal scale behind the LB..." />
+      </label>
+      <div className="drill-step-footer">
+        <button className="link-button" onClick={onBack}><ArrowLeft size={14} /> Back to components</button>
+        <span className={`muted ${okFailure && okScale ? "is-ok" : ""}`}>
+          {okFailure && okScale ? "Deep dive complete." : "Each answer needs ≥60 chars."}
+        </span>
+        <button className="primary-cta" disabled={!okFailure || !okScale} onClick={onNext}>
+          Continue to Review <ArrowRight size={14} />
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -550,6 +675,7 @@ function ReviewStep({
   theme,
   kata,
   onUpdateKataAdr,
+  drill,
 }) {
   const score = useMemo(
     () => scoreDrill(state, drillCase.expectedComponents || []),
@@ -716,6 +842,14 @@ function ReviewStep({
             );
           })}
         </ul>
+
+        {(drill?.deepDive?.failure || drill?.deepDive?.scale) && (
+          <div className="panel" style={{ background: "var(--soft)" }}>
+            <p className="eyebrow">Your deep dive</p>
+            {drill.deepDive.failure && <><strong>Failure analysis</strong><p style={{ whiteSpace: "pre-wrap" }}>{drill.deepDive.failure}</p></>}
+            {drill.deepDive.scale && <><strong>Scale plan</strong><p style={{ whiteSpace: "pre-wrap" }}>{drill.deepDive.scale}</p></>}
+          </div>
+        )}
 
         {kata && (
           <label className="field-label">
