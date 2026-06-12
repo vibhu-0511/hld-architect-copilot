@@ -4405,3 +4405,6 @@ select {
 .impact-item.impact-overloaded { background: var(--amber-bg, #fef3c7); color: var(--amber, #d97706); }
 .impact-item.impact-latency { background: var(--amber-bg, #fef3c7); color: var(--amber, #d97706); }
 .impact-item.impact-degraded { background: var(--red-bg, #fee2e2); color: var(--red, #dc2626); }
+
+/* Sketch canvas */
+.sketch-canvas { height: 480px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-top: var(--space-2); }

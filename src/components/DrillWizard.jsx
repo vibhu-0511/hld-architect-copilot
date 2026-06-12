@@ -32,6 +32,7 @@ import {
 } from "../data/workspaces.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { NoteReader } from "./NoteReader.jsx";
+import { SketchPanel } from "./SketchPanel.jsx";
 
 const STEP_LABELS = ["Constraints", "Entities & API", "Components", "Deep dive", "Review"];
 
@@ -286,10 +287,13 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
           drillCase={drillCase}
           components={state.components || []}
           edges={drill.edges || []}
+          sketch={drill.sketch}
+          theme={theme}
           onAdd={addComponent}
           onRemove={removeComponent}
           onUpdate={updateComponent}
           onEdgesChange={(edges) => persist({ edges })}
+          onSaveSketch={(sketch) => persist({ sketch })}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
         />
@@ -558,10 +562,13 @@ function ComponentsStep({
   drillCase,
   components,
   edges,
+  sketch,
+  theme,
   onAdd,
   onRemove,
   onUpdate,
   onEdgesChange,
+  onSaveSketch,
   onBack,
   onNext,
 }) {
@@ -699,6 +706,8 @@ function ComponentsStep({
           </button>
         </div>
       )}
+
+      <SketchPanel sketch={sketch} onSave={onSaveSketch} theme={theme} />
 
       <div className="drill-step-footer">
         <button className="link-button" onClick={onBack}>
