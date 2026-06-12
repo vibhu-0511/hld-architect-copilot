@@ -4366,3 +4366,15 @@ select {
 .napkin-grade.invalid { background: var(--soft); color: var(--muted); }
 .napkin-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); text-align: center; }
 .napkin-summary strong { font-size: var(--text-2xl); display: block; }
+
+/* Timer pill */
+.timer-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.timer-pill.tone-success { background: var(--success-bg); color: var(--success-ink); }
+.timer-pill.tone-warning { background: var(--warning-bg); color: var(--warning-ink); }
+.timer-pill.tone-danger { background: var(--danger-bg); color: var(--danger-ink); }
+
+/* Swap comparator */
+.swap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.swap-col { border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-4); display: grid; gap: var(--space-2); }
+.swap-col.is-better { border-color: var(--green); }
+@media (max-width: 700px) { .swap-grid { grid-template-columns: 1fr; } }

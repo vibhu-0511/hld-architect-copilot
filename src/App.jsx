@@ -27,6 +27,7 @@ import { OutageReplayView } from "./components/OutageReplayView.jsx";
 import { BugFinderView } from "./components/BugFinderView.jsx";
 import { CapacityLabView } from "./components/CapacityLabView.jsx";
 import { NapkinQuizView } from "./components/NapkinQuizView.jsx";
+import { ReviewQueueView } from "./components/ReviewQueueView.jsx";
 import { AppSidebar } from "./components/AppSidebar.jsx";
 import { TabErrorBoundary } from "./components/TabErrorBoundary.jsx";
 
@@ -568,6 +569,7 @@ export default function App() {
     null,
   );
   const [napkinOpen, setNapkinOpen] = useLocalStorage("hld-napkin-open", false);
+  const [reviewOpen, setReviewOpen] = useLocalStorage("hld-review-open", false);
   const [level, setLevel] = useLocalStorage("hld-level", null);
   const [starterProgress, setStarterProgress] = useLocalStorage(
     "hld-starter-progress",
@@ -652,6 +654,8 @@ export default function App() {
             onOpenNote={openNote}
             theme={theme}
           />
+        ) : reviewOpen ? (
+          <ReviewQueueView onExit={() => setReviewOpen(false)} onOpenNote={openNote} />
         ) : (
           <TodayView
             onOpenNote={openNote}
@@ -659,6 +663,7 @@ export default function App() {
             onSelectSkill={selectSkill}
             onOpenWorkspace={openWorkspace}
             onOpenOutageReplay={openOutageReplay}
+            onOpenReview={() => setReviewOpen(true)}
           />
         )
       )}
