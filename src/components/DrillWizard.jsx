@@ -80,6 +80,7 @@ const EMPTY_DRILL = {
   api: "",
   components: [],
   deepDive: { failure: "", scale: "" },
+  edges: [],
   rubric: {},
   step: 0,
 };
@@ -154,7 +155,10 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
   };
 
   const removeComponent = (id) =>
-    persist({ components: drill.components.filter((c) => c.id !== id) });
+    persist({
+      components: drill.components.filter((c) => c.id !== id),
+      edges: (drill.edges || []).filter((e) => e.from !== id && e.to !== id),
+    });
 
   const updateComponent = (id, patch) =>
     persist({
@@ -281,9 +285,11 @@ export function DrillWizard({ caseId, onExit, onOpenNote, theme }) {
         <ComponentsStep
           drillCase={drillCase}
           components={state.components || []}
+          edges={drill.edges || []}
           onAdd={addComponent}
           onRemove={removeComponent}
           onUpdate={updateComponent}
+          onEdgesChange={(edges) => persist({ edges })}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
         />
@@ -551,9 +557,11 @@ function SelectField({ label, value, onChange, options }) {
 function ComponentsStep({
   drillCase,
   components,
+  edges,
   onAdd,
   onRemove,
   onUpdate,
+  onEdgesChange,
   onBack,
   onNext,
 }) {
@@ -640,6 +648,57 @@ function ComponentsStep({
           )}
         </div>
       </div>
+
+      {components.length >= 2 && (
+        <div className="wiring-section">
+          <p className="eyebrow">Wiring</p>
+          <p className="muted">Connect boxes. Client is the implicit entry point.</p>
+          {edges.map((e) => (
+            <div key={e.id} className="wiring-row">
+              <select
+                value={e.from}
+                onChange={(ev) =>
+                  onEdgesChange(edges.map((x) => (x.id === e.id ? { ...x, from: ev.target.value } : x)))
+                }
+              >
+                <option value="client">Client</option>
+                {components.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <span>→</span>
+              <select
+                value={e.to}
+                onChange={(ev) =>
+                  onEdgesChange(edges.map((x) => (x.id === e.id ? { ...x, to: ev.target.value } : x)))
+                }
+              >
+                {components.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                className="icon-button"
+                onClick={() => onEdgesChange(edges.filter((x) => x.id !== e.id))}
+                title="Remove"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <button
+            className="link-button"
+            onClick={() =>
+              onEdgesChange([
+                ...edges,
+                { id: `e-${Date.now().toString(36)}`, from: "client", to: components[0].id },
+              ])
+            }
+          >
+            + Add connection
+          </button>
+        </div>
+      )}
 
       <div className="drill-step-footer">
         <button className="link-button" onClick={onBack}>

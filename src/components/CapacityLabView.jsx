@@ -32,6 +32,7 @@ import { benchmarkFor } from "../data/benchmarks.js";
 import { SWAP_ALTERNATIVES, swapComponent } from "../lib/swapAlternatives.js";
 import { lintDrill } from "../lib/drillLinter.js";
 import { PALETTE_BY_ID } from "../data/drillCases.js";
+import { simulateTraffic } from "../lib/trafficSim.js";
 
 const SEVERITY_LABEL = {
   high: "High",
@@ -163,6 +164,7 @@ function CapacityLab({ workspace, onExit, onOpenNote }) {
   const drillCase = getCase(workspace.caseId);
   const constraints = workspace.drill?.constraints || {};
   const components = workspace.drill?.components || [];
+  const edges = workspace.drill?.edges || [];
 
   const [assumptions, setAssumptions] = useState(DEFAULT_ASSUMPTIONS);
 
@@ -174,6 +176,11 @@ function CapacityLab({ workspace, onExit, onOpenNote }) {
   const bottlenecks = useMemo(
     () => simulateBottlenecks(constraints, components),
     [constraints, components],
+  );
+
+  const trafficFlow = useMemo(
+    () => simulateTraffic(constraints, components, edges),
+    [constraints, components, edges],
   );
 
   const phases = useMemo(
@@ -211,6 +218,8 @@ function CapacityLab({ workspace, onExit, onOpenNote }) {
         onChange={setAssumption}
         onReset={resetAssumptions}
       />
+
+      <TrafficFlowPanel flow={trafficFlow} hasEdges={edges.length > 0} />
 
       <BottleneckPanel bottlenecks={bottlenecks} onOpenNote={onOpenNote} />
 
@@ -373,6 +382,50 @@ function NumberAssumption({ label, value, onChange, step = 1, min, max }) {
         }}
       />
     </label>
+  );
+}
+
+function TrafficFlowPanel({ flow, hasEdges }) {
+  const nodes = Object.values(flow.nodes);
+  if (nodes.length === 0) return null;
+  return (
+    <section className="panel">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow"><Activity size={13} /> Traffic flow</p>
+          <h2>QPS propagation through the topology</h2>
+        </div>
+      </div>
+      {!hasEdges && (
+        <p className="muted">
+          No wiring yet — open the drill's Components step to connect boxes;
+          simulating flat fan-out for now.
+        </p>
+      )}
+      {flow.hasCycle && (
+        <p className="reader-error">Wiring has a cycle — flow shown is partial.</p>
+      )}
+      <table className="flow-table">
+        <thead>
+          <tr><th>Component</th><th>QPS in</th><th>Capacity</th><th>Utilization</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {nodes.map((n) => (
+            <tr key={n.name + n.paletteId}>
+              <td>{n.name}</td>
+              <td>{formatNumber(n.qpsIn)}</td>
+              <td>{n.capacity === Infinity ? "∞" : formatNumber(n.capacity)}</td>
+              <td>
+                <div className="axis-bar" style={{ "--pct": `${Math.min(n.utilization * 100, 100)}%` }}>
+                  <div className="axis-fill" style={{ background: n.utilization > 1 ? "var(--red, #dc2626)" : n.utilization > 0.7 ? "var(--amber, #d97706)" : "var(--green, #16a34a)" }} />
+                </div>
+              </td>
+              <td><span className={`status-pill status-${n.status}`}>{n.status}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }
 
