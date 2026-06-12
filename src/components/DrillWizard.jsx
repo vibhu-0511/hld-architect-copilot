@@ -33,6 +33,7 @@ import {
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { NoteReader } from "./NoteReader.jsx";
 import { SketchPanel } from "./SketchPanel.jsx";
+import { AiReviewPanel } from "./AiReviewPanel.jsx";
 
 const STEP_LABELS = ["Constraints", "Entities & API", "Components", "Deep dive", "Review"];
 
@@ -947,6 +948,16 @@ function ReviewStep({
             {state.completedAt ? "Drill marked complete" : "Mark drill complete"}
           </button>
         </div>
+      </div>
+
+      <div className="panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">AI second opinion</p>
+            <h2>Optional — bring your own LLM key</h2>
+          </div>
+        </div>
+        <AiReviewPanel drill={drill} />
       </div>
 
       <div className="panel reference-panel">
