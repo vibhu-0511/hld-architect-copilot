@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -29,6 +29,9 @@ import { useWorkspaces } from "../data/workspaces.js";
 import { getCase } from "../data/drillCases.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
 import { benchmarkFor } from "../data/benchmarks.js";
+import { SWAP_ALTERNATIVES, swapComponent } from "../lib/swapAlternatives.js";
+import { lintDrill } from "../lib/drillLinter.js";
+import { PALETTE_BY_ID } from "../data/drillCases.js";
 
 const SEVERITY_LABEL = {
   high: "High",
@@ -210,6 +213,8 @@ function CapacityLab({ workspace, onExit, onOpenNote }) {
       />
 
       <BottleneckPanel bottlenecks={bottlenecks} onOpenNote={onOpenNote} />
+
+      <SwapPanel constraints={constraints} components={components} />
 
       <PhasedCanvas phases={phases} />
 
@@ -455,6 +460,73 @@ function BottleneckCard({ row, onOpenNote }) {
         </ul>
       )}
     </article>
+  );
+}
+
+function SwapPanel({ constraints, components }) {
+  const swappable = components.filter((c) => SWAP_ALTERNATIVES[c.paletteId]);
+  const [selectedId, setSelectedId] = useState(swappable[0]?.id || "");
+  const selected = components.find((c) => c.id === selectedId);
+  const alternatives = selected ? SWAP_ALTERNATIVES[selected.paletteId] || [] : [];
+  const [altPalette, setAltPalette] = useState(alternatives[0] || "");
+
+  useEffect(() => {
+    if (swappable.length && !swappable.find((c) => c.id === selectedId)) {
+      setSelectedId(swappable[0]?.id || "");
+    }
+  }, [swappable, selectedId]);
+
+  useEffect(() => {
+    if (alternatives.length && !alternatives.includes(altPalette)) {
+      setAltPalette(alternatives[0] || "");
+    }
+  }, [alternatives, altPalette]);
+
+  if (swappable.length === 0) return null;
+
+  const swapped = altPalette && selected
+    ? swapComponent(components, selectedId, altPalette, PALETTE_BY_ID)
+    : components;
+
+  const baseBreaks = simulateBottlenecks(constraints, components).reduce((n, r) => n + r.breaks.length, 0);
+  const swapBreaks = simulateBottlenecks(constraints, swapped).reduce((n, r) => n + r.breaks.length, 0);
+  const baseLint = lintDrill({ constraints, components, rubric: {} }).length;
+  const swapLint = lintDrill({ constraints, components: swapped, rubric: {} }).length;
+  const baseCap = computeCapacity(constraints, components, DEFAULT_ASSUMPTIONS);
+  const swapCap = computeCapacity(constraints, swapped, DEFAULT_ASSUMPTIONS);
+
+  return (
+    <section className="panel">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Component swap</p>
+          <h2>What if you swapped one box?</h2>
+        </div>
+      </div>
+      <div className="button-row">
+        <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+          {swappable.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.paletteId})</option>)}
+        </select>
+        <span>→</span>
+        <select value={altPalette} onChange={(e) => setAltPalette(e.target.value)}>
+          {alternatives.map((p) => <option key={p} value={p}>{PALETTE_BY_ID[p]?.name || p}</option>)}
+        </select>
+      </div>
+      <div className="swap-grid">
+        <div className={`swap-col ${baseBreaks <= swapBreaks ? "is-better" : ""}`}>
+          <strong>Current</strong>
+          <p>Bottleneck breaks: {baseBreaks}</p>
+          <p>Lint findings: {baseLint}</p>
+          <p>Cost band: {formatUSD(baseCap.cost.lowerUSD)}–{formatUSD(baseCap.cost.upperUSD)}/mo</p>
+        </div>
+        <div className={`swap-col ${swapBreaks < baseBreaks ? "is-better" : ""}`}>
+          <strong>With {PALETTE_BY_ID[altPalette]?.name || altPalette}</strong>
+          <p>Bottleneck breaks: {swapBreaks}</p>
+          <p>Lint findings: {swapLint}</p>
+          <p>Cost band: {formatUSD(swapCap.cost.lowerUSD)}–{formatUSD(swapCap.cost.upperUSD)}/mo</p>
+        </div>
+      </div>
+    </section>
   );
 }
 
