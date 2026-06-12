@@ -1,6 +1,6 @@
 import {
   AlertTriangle, BookText, Brain, Bug, Calculator, CalendarDays,
-  ClipboardList, FileText, Folder, Moon, NotebookPen, Sun, Target, Wrench,
+  ClipboardList, FileText, Flame, Folder, Moon, NotebookPen, Sun, Target, Wrench,
 } from "lucide-react";
 
 const GROUPS = [
@@ -12,6 +12,7 @@ const GROUPS = [
       { id: "drill", label: "Drill", icon: Wrench },
       { id: "bugfinder", label: "Bug Finder", icon: Bug },
       { id: "outage", label: "Outage", icon: AlertTriangle },
+      { id: "failure", label: "Failure", icon: Flame },
       { id: "capacity", label: "Capacity", icon: Calculator },
     ],
   },

@@ -4392,3 +4392,16 @@ select {
 .flow-table .status-ok { background: var(--green-bg, #e6f9e6); color: var(--green, #16a34a); }
 .flow-table .status-hot { background: var(--amber-bg, #fef3c7); color: var(--amber, #d97706); }
 .flow-table .status-overloaded { background: var(--red-bg, #fee2e2); color: var(--red, #dc2626); }
+
+/* Failure drill */
+.failure-modes { display: grid; gap: var(--space-2); }
+.failure-mode-card { display: grid; gap: 2px; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
+.failure-mode-card.is-active { border-color: var(--chip-ink); background: var(--chip-bg); }
+.failure-mode-card input { display: none; }
+.failure-mode-card small { color: var(--muted); }
+.impact-list { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+.impact-item { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-sm); }
+.impact-item.impact-starved { background: var(--red-bg, #fee2e2); color: var(--red, #dc2626); }
+.impact-item.impact-overloaded { background: var(--amber-bg, #fef3c7); color: var(--amber, #d97706); }
+.impact-item.impact-latency { background: var(--amber-bg, #fef3c7); color: var(--amber, #d97706); }
+.impact-item.impact-degraded { background: var(--red-bg, #fee2e2); color: var(--red, #dc2626); }

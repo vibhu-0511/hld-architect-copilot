@@ -163,6 +163,15 @@ export function findBugFinderWorkspace(scenarioId) {
   );
 }
 
+export function findFailureWorkspace(drillWorkspaceId) {
+  if (!drillWorkspaceId) return null;
+  return (
+    readAll().find(
+      (w) => w.kind === "failure" && w.failureRef === drillWorkspaceId,
+    ) || null
+  );
+}
+
 export function createWorkspace(partial) {
   const ws = {
     id: makeId("ws"),
@@ -266,6 +275,22 @@ export function ensureBugFinderWorkspace(scenarioId, scenarioTitle) {
   });
 }
 
+export function ensureFailureWorkspace(drillWorkspaceId, name) {
+  if (!drillWorkspaceId) return null;
+  const existing = findFailureWorkspace(drillWorkspaceId);
+  if (existing) return existing;
+  return createWorkspace({
+    name: `${name || drillWorkspaceId} (failure drill)`,
+    kind: "failure",
+    failureRef: drillWorkspaceId,
+    failure: {
+      step: 0,
+      currentAttempt: null,
+      attempts: [],
+    },
+  });
+}
+
 export function statusOf(workspace) {
   if (!workspace) return null;
   if (workspace.completedAt) return "completed";
@@ -285,6 +310,16 @@ export function statusOf(workspace) {
     const latest =
       workspace.bugfinder.attempts[workspace.bugfinder.attempts.length - 1];
     if (latest?.completedAt && !workspace.bugfinder.currentAttempt) {
+      return "completed";
+    }
+  }
+  if (
+    workspace.kind === "failure" &&
+    (workspace.failure?.attempts?.length || 0) > 0
+  ) {
+    const latest =
+      workspace.failure.attempts[workspace.failure.attempts.length - 1];
+    if (latest?.score && !workspace.failure.currentAttempt) {
       return "completed";
     }
   }

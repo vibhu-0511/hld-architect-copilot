@@ -26,6 +26,7 @@ import { WorkspacesView } from "./components/WorkspacesView.jsx";
 import { OutageReplayView } from "./components/OutageReplayView.jsx";
 import { BugFinderView } from "./components/BugFinderView.jsx";
 import { CapacityLabView } from "./components/CapacityLabView.jsx";
+import { FailureDrillView } from "./components/FailureDrillView.jsx";
 import { NapkinQuizView } from "./components/NapkinQuizView.jsx";
 import { ReviewQueueView } from "./components/ReviewQueueView.jsx";
 import { AppSidebar } from "./components/AppSidebar.jsx";
@@ -709,6 +710,11 @@ export default function App() {
           onSelectScenario={setActiveBugScenarioId}
           onOpenNote={openNote}
         />
+      )}
+      {activeTab === "failure" && (
+        <TabErrorBoundary tabKey={activeTab}>
+          <FailureDrillView onOpenNote={openNote} />
+        </TabErrorBoundary>
       )}
       {activeTab === "capacity" && (
         <CapacityLabView

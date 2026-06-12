@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Bug,
   ClipboardList,
+  Flame,
   Folder,
   Plus,
   Search,
@@ -25,6 +26,7 @@ const KIND_LABEL = {
   review: "System review",
   outage: "Outage replay",
   bugfinder: "Bug Finder",
+  failure: "Failure drill",
   note: "Note",
 };
 
@@ -33,6 +35,7 @@ const KIND_ICON = {
   review: ClipboardList,
   outage: AlertTriangle,
   bugfinder: Bug,
+  failure: Flame,
   note: Folder,
 };
 
