@@ -2,7 +2,10 @@ import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, PenTool } from "lucide-react";
 
 const Excalidraw = lazy(() =>
-  import("@excalidraw/excalidraw").then((m) => ({ default: m.Excalidraw })),
+  import("@excalidraw/excalidraw").then(async (m) => {
+    await import("@excalidraw/excalidraw/index.css");
+    return { default: m.Excalidraw };
+  }),
 );
 
 export function SketchPanel({ sketch, onSave, theme }) {
