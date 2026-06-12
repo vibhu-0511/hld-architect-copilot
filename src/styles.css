@@ -4334,3 +4334,35 @@ select {
 /* Error boundary */
 .tab-error { display: grid; gap: var(--space-3); justify-items: start; }
 .tab-error pre { white-space: pre-wrap; background: var(--danger-bg); color: var(--danger-ink); padding: var(--space-3); border-radius: var(--radius-sm); width: 100%; }
+
+/* Benchmark list */
+.benchmark-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.benchmark-list li { display: grid; gap: 2px; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.benchmark-list li span { color: var(--muted); font-size: var(--text-sm); }
+
+/* Drill score */
+.drill-score-panel { display: grid; gap: var(--space-4); }
+.drill-score-total { display: flex; align-items: baseline; gap: var(--space-3); }
+.drill-score-total strong { font-size: 40px; line-height: 1; }
+.verdict-pill { padding: 3px 10px; border-radius: 999px; font-size: var(--text-xs); font-weight: 600; background: var(--chip-bg); color: var(--chip-ink); }
+.verdict-pill.verdict-needs-work { background: var(--danger-bg); color: var(--danger-ink); }
+.verdict-pill.verdict-developing { background: var(--warning-bg); color: var(--warning-ink); }
+.verdict-pill.verdict-architect-level { background: var(--success-bg); color: var(--success-ink); }
+.drill-score-axes { display: grid; gap: var(--space-2); }
+.drill-score-axis { display: grid; grid-template-columns: 110px 1fr 32px; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+.axis-bar { height: 8px; border-radius: 999px; background: var(--soft); overflow: hidden; }
+.axis-bar i { display: block; height: 100%; background: var(--blue); border-radius: 999px; }
+
+/* Kata mode */
+.kata-banner { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-3); border-radius: var(--radius-md); background: var(--warning-bg); color: var(--warning-ink); margin-top: var(--space-3); }
+.kata-banner p { margin: 2px 0 0; font-size: var(--text-sm); }
+
+/* Napkin quiz */
+.napkin-card { border-left: 3px solid var(--violet); }
+.napkin-grade { padding: var(--space-3); border-radius: var(--radius-md); font-weight: 600; }
+.napkin-grade.spot-on { background: var(--success-bg); color: var(--success-ink); }
+.napkin-grade.close { background: var(--warning-bg); color: var(--warning-ink); }
+.napkin-grade.off { background: var(--danger-bg); color: var(--danger-ink); }
+.napkin-grade.invalid { background: var(--soft); color: var(--muted); }
+.napkin-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); text-align: center; }
+.napkin-summary strong { font-size: var(--text-2xl); display: block; }

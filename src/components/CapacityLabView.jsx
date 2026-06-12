@@ -28,6 +28,7 @@ import {
 import { useWorkspaces } from "../data/workspaces.js";
 import { getCase } from "../data/drillCases.js";
 import { SourceNoteLink } from "./SourceNoteLink.jsx";
+import { benchmarkFor } from "../data/benchmarks.js";
 
 const SEVERITY_LABEL = {
   high: "High",
@@ -211,6 +212,29 @@ function CapacityLab({ workspace, onExit, onOpenNote }) {
       <BottleneckPanel bottlenecks={bottlenecks} onOpenNote={onOpenNote} />
 
       <PhasedCanvas phases={phases} />
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Component envelopes</p>
+            <h2>What each box can take before it bends</h2>
+          </div>
+        </div>
+        <ul className="benchmark-list">
+          {components.map((c) => {
+            const b = benchmarkFor(c.paletteId);
+            if (!b) return null;
+            return (
+              <li key={c.id}>
+                <strong>{c.name}</strong>
+                <span>{b.maxQps === Infinity ? "scales out" : `~${b.maxQps.toLocaleString()} QPS`} · ~{b.p50LatencyMs}ms p50</span>
+                <p className="muted">{b.note}</p>
+                <SourceNoteLink path={b.citation} onOpenNote={onOpenNote} />
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </main>
   );
 }
