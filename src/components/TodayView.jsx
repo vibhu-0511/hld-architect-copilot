@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Flame,
   Folder,
+  RefreshCw,
   Sparkles,
   Target,
   Wrench,
@@ -13,6 +14,7 @@ import {
 import { SKILLS } from "../data/skills.js";
 import { ALL_TERMS } from "../data/terms.js";
 import { LEARNING_PHASES } from "../data/learning.js";
+import { dueCount } from "../lib/reviewQueue.js";
 import { notesByType, getNote } from "../data/vaultIndex.js";
 import { statusOf, useWorkspaces } from "../data/workspaces.js";
 import { getCase } from "../data/drillCases.js";
@@ -100,6 +102,7 @@ export function TodayView({
   onSelectSkill,
   onOpenWorkspace,
   onOpenOutageReplay,
+  onOpenReview,
 }) {
   const streak = useStreak(typeof window === "undefined" ? null : window.localStorage);
   const { workspaces } = useWorkspaces();
@@ -261,6 +264,15 @@ export function TodayView({
               </button>
             </>
           )}
+        </article>
+
+        <article className="today-card today-review">
+          <header><RefreshCw size={16} /><span>Review queue</span></header>
+          <h3>{dueCount()} cards due</h3>
+          <p>Spaced repetition over terms and outage lessons. Five minutes.</p>
+          <button className="card-cta" onClick={() => onOpenReview?.()}>
+            Start reviewing <ArrowRight size={14} />
+          </button>
         </article>
       </section>
 

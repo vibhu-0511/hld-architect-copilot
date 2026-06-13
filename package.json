@@ -9,9 +9,11 @@
     "preview": "vite preview --host 127.0.0.1",
     "index:vault": "node scripts/buildVaultIndex.mjs",
     "predev": "node scripts/buildVaultIndex.mjs",
-    "prebuild": "node scripts/buildVaultIndex.mjs"
+    "prebuild": "node scripts/buildVaultIndex.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
     "@vitejs/plugin-react": "^5.0.0",
     "highlight.js": "^11.11.1",
     "lucide-react": "^0.468.0",
@@ -19,6 +21,10 @@
     "mermaid": "^11.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "ts-fsrs": "^5.4.1",
     "vite": "^7.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
   }
 }

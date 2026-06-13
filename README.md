@@ -2,7 +2,7 @@
 
 **Live demo:** [vibhu-0511.github.io/hld-architect-copilot](https://vibhu-0511.github.io/hld-architect-copilot/)
 
-A browser-based **system-design gym**. Practice architecting real systems, replay famous outages, hunt bugs in flawed designs, and run capacity numbers — grounded in a curated 255-note vault of system design knowledge.
+A browser-based **system-design gym**. Practice architecting real systems, replay famous outages, hunt bugs in flawed designs, and run capacity numbers — grounded in a curated 265-note vault of system design knowledge.
 
 > **Goal:** stop reading about system design and start practicing it. Five minutes of drills a day beats a weekend marathon every quarter.
 
@@ -14,13 +14,15 @@ A browser-based **system-design gym**. Practice architecting real systems, repla
 |---|---|
 | **Today** | Daily drill, daily outage to replay, term to revisit, streak counter. |
 | **Skills** | Ten architect behaviors (constraints first, defends every component, trade-offs, napkin math, failure-first, patterns, phased complexity, communication, calibration, looped practice). Each has cue, drill, bug scenario, and source notes. |
-| **Drill** | Greenfield system design from scratch — six cases (URL Shortener, Notification Service, Real-time Chat, Food Delivery, Search Autocomplete, Payment System). Three-step wizard: state constraints → choose components with justification → review against a 19-rule architecture linter and a real case study. |
+| **Drill** | Greenfield system design — 12 cases (URL Shortener, Notification, Chat, Food Delivery, Autocomplete, Payments, Ticketmaster, Google Docs, Video Streaming, Web Crawler, Logging Pipeline, Maps). Five-step wizard: constraints → entities & API → components with justification + wiring + Excalidraw sketch → deep-dive (failure/scale) → review with 5-axis scoring, 19-rule linter, component diff, and optional AI review. **Kata mode** adds random constraint twists + mandatory ADR. **Interview mode** runs a persistent 45-minute countdown. **Napkin-math quiz** drills order-of-magnitude estimation. |
 | **Bug Finder** | Six pre-built flawed designs with mixed real bugs and decoys. Pick the real ones; reveal compares your picks with the linter run. |
-| **Outage** | 15 real production outages (S3 2017, Facebook BGP, CrowdStrike, Knight Capital, GitLab, TSB, etc.). Predict root cause / blast radius / recovery / prevention before reading the postmortem. Self-rate, save attempts. |
-| **Capacity** | Capacity calculator (storage / bandwidth / IOPS / cost band), bottleneck simulator at 2× / 10× / 100× / 1000×, phased canvas showing how the architecture must evolve. |
+| **Outage** | 25 real production outages (S3, Facebook BGP, CrowdStrike, Knight Capital, GitLab, Cloudflare, Dyn DNS, left-pad, Atlassian, Reddit, Datadog, Change Healthcare, OpenAI, etc.). Predict root cause / blast radius / recovery / prevention before reading the postmortem. Self-rate, save attempts. |
+| **Failure** | Chaos-engineering drill: pick a component from your design, inject a failure mode (slow / dead / partitioned / drop 1% / drop 50%), predict the cascade, then reveal the simulated blast radius with before/after QPS flow. |
+| **Capacity** | Capacity calculator (storage / bandwidth / IOPS / cost band), QPS traffic flow simulator over your wired topology, bottleneck simulator at 2× / 10× / 100× / 1000×, component swap comparator (what-if analysis), phased canvas showing how the architecture must evolve. |
 | **Workspaces** | Persistence layer for everything you start. Drill attempts, outage replays, bug hunts, system reviews — all live here, all in localStorage, all resumable. |
 | **Library** | The full 255-note vault rendered in-app: folder tree, full-text search, backlinks, code highlighting, and Mermaid diagrams. |
-| **Vocabulary** | 100+ system-design terms with beginner / what / when / not-when / cost / example, plus flashcards. |
+| **Vocabulary** | Curated terms with beginner / what / when / not-when / cost / example, plus flashcards. |
+| **Review Queue** | FSRS spaced-repetition over vocabulary terms and outage lessons. Accessible from the Today tab. |
 | **Review System** | Paste an architecture brief, get findings sorted by severity. |
 | **Proposal** | Turn review findings into a founder-facing recommendation draft. |
 | **Notes** | Personal note-taking with templates, attached to phases / cases / bugs. |
@@ -34,7 +36,11 @@ There's also a **beginner mode** with a 14-lesson starter path that walks you fr
 - **React 19** + **Vite 7** (no backend, no auth, all state in `localStorage`)
 - **Marked** + lazy **Mermaid** + lazy **highlight.js** for note rendering, with an Obsidian `[[wikilink]]` extension
 - **Build-time vault indexer** (Node ESM) walks the markdown vault and emits per-folder content chunks for code-split lazy loading
-- **Tailwind-free, hand-written CSS** with light/dark themes
+- **Vitest** for unit tests (scoring, capacity, traffic sim, failure sim, napkin math, benchmarks, FSRS queue)
+- **ts-fsrs** for spaced-repetition scheduling
+- **@excalidraw/excalidraw** (lazy-loaded) for freehand architecture sketches
+- **Multi-provider AI review** — BYO key for Anthropic / OpenAI / xAI (Grok) / any OpenAI-compatible endpoint, zero SDK deps (raw `fetch`)
+- **Tailwind-free, hand-written CSS** with light/dark themes, sidebar app shell, mobile-responsive
 - **lucide-react** icons
 - **Multi-stage Docker** (Node build → nginx serve)
 - Free hosting on **Vercel / Netlify / Cloudflare Pages / GitHub Pages**
@@ -125,7 +131,7 @@ Pick one. All four give you a permanent URL on a free tier.
 
 ```
 .
-├── vault/system_design/         255 markdown notes (the corpus)
+├── vault/system_design/         265 markdown notes (the corpus)
 ├── scripts/buildVaultIndex.mjs  Build-time indexer
 ├── src/
 │   ├── App.jsx                  Tab shell, routing, level gate
@@ -151,6 +157,7 @@ Pick one. All four give you a permanent URL on a free tier.
 | `npm run dev` | Vite dev server (auto-runs indexer first) |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview the production build locally |
+| `npx vitest run` | Run unit tests (scoring, traffic sim, failure sim, etc.) |
 | `npm run index:vault` | Re-run the vault indexer manually |
 
 The `predev` and `prebuild` lifecycle scripts run the indexer automatically — you rarely need to call it directly.
@@ -173,7 +180,7 @@ Append to `OUTAGE_REPLAYS` in [`src/data/outageReplays.js`](./src/data/outageRep
 
 > **HLD Architect Co-pilot** — *(personal project)*
 >
-> Practice-first system-design platform built with React 19 + Vite + a custom Node-ESM indexer. Walks 255 markdown notes from an Obsidian vault and emits per-folder content chunks for code-split lazy loading. Features include a typed-design architecture linter (19 rules over a typed model, each citing real production outages), a 15-outage replay drill, a bug-finder drill with mixed real bugs + decoys, a capacity simulator that scales QPS at 2× / 10× / 100× / 1000× to surface the next bottleneck, and a workspace persistence layer with cross-tab sync. ~6K LOC. Multi-stage Docker, deployed on Vercel.
+> Practice-first system-design platform built with React 19 + Vite + a custom Node-ESM indexer. Walks 265 markdown notes from an Obsidian vault and emits per-folder content chunks for code-split lazy loading. Features: 5-step delivery-framework drill wizard with 5-axis scoring, kata mode (random constraint twists + ADR), interview mode (persistent 45-min countdown), 19-rule architecture linter citing real outages, 25-outage replay drill, QPS traffic-flow simulator with typed topology edges, failure-injection chaos drill (5 modes over wired designs), component swap comparator, napkin-math estimation quiz, FSRS spaced-repetition review queue, Excalidraw sketch canvas, optional multi-provider AI design review (Anthropic/OpenAI/Grok), bug-finder drill with mixed real bugs + decoys, capacity simulator at 2×/10×/100×/1000×, and a workspace persistence layer with cross-tab sync. Multi-stage Docker, deployed on GitHub Pages.
 >
 > Live: https://vibhu-0511.github.io/hld-architect-copilot/  ·  Source: https://github.com/vibhu-0511/hld-architect-copilot
 
@@ -182,7 +189,7 @@ Append to `OUTAGE_REPLAYS` in [`src/data/outageReplays.js`](./src/data/outageRep
 ## Credits & inspirations
 
 - Vault content distilled from years of system-design study notes — Designing Data-Intensive Applications, ByteByteGo, real postmortems, and personal project experience.
-- Outage replays sourced from public postmortems (AWS, Cloudflare, Facebook, GitHub, GitLab, CrowdStrike, Knight Capital, TSB, Roblox, Slack, Discord, Southwest, Google Cloud, Fastly).
+- Outage replays sourced from public postmortems (AWS, Cloudflare, Facebook, GitHub, GitLab, CrowdStrike, Knight Capital, TSB, Roblox, Slack, Discord, Southwest, Google Cloud, Fastly, Dyn, Atlassian, Reddit, Datadog, Change Healthcare, OpenAI, YouTube, Salesforce, left-pad/npm).
 
 ---
 

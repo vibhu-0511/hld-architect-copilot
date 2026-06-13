@@ -10,7 +10,7 @@ const DIFFICULTY_LABEL = {
   advanced: "Advanced",
 };
 
-export function DrillView({ activeCaseId, onSelectCase, onOpenNote, theme, level }) {
+export function DrillView({ activeCaseId, onSelectCase, onOpenNote, theme, level, onOpenNapkin }) {
   const { workspaces } = useWorkspaces();
 
   const cases = useMemo(() => {
@@ -60,6 +60,14 @@ export function DrillView({ activeCaseId, onSelectCase, onOpenNote, theme, level
       </section>
 
       <section className="drill-case-grid">
+        <article className="drill-case-card napkin-card" onClick={onOpenNapkin} role="button" tabIndex={0}>
+          <span className="difficulty-pill">Daily reps</span>
+          <h3>Napkin Math Quiz</h3>
+          <p>12 estimation questions. Land within the right order of magnitude.</p>
+          <button className="drill-case-cta" onClick={(e) => { e.stopPropagation(); onOpenNapkin(); }}>
+            Start <ArrowRight size={14} />
+          </button>
+        </article>
         {cases.map((c) => (
           <article
             key={c.id}
