@@ -1,3 +1,5 @@
+> **New:** this app has grown into a course-first rebuild with 67 chapters, live simulators and the same practice gym: [learn system design](https://vibhu-0511.github.io/learn-system-design/).
+
 # HLD Architect Co-pilot
 
 **Live demo:** [vibhu-0511.github.io/hld-architect-copilot](https://vibhu-0511.github.io/hld-architect-copilot/)
